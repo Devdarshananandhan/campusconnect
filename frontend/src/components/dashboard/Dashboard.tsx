@@ -1,250 +1,487 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Header from '../shared/Header';
 import Sidebar from '../shared/Sidebar';
-import Feed from './Feed';
-import Network from './Network';
-import Events from '../events/EventsList';
-import Mentorship from './Mentorship';
-import Messages from '../messaging/Messages';
+import Feed, { FeedItem } from './Feed';
+import Network, { NetworkUserCard } from './Network';
+import Events, { EventCard } from '../events/EventsList';
+import Mentorship, { MentorSuggestion } from './Mentorship';
+import Messages, { ConversationPreview } from '../messaging/Messages';
 import Profile from '../profile/Profile';
 import GroupsPage from '../groups/GroupsPage';
 import Leaderboard from '../gamification/Leaderboard';
 import { BadgeShowcase } from '../gamification/BadgeShowcase';
 import KnowledgeHub from '../knowledge/KnowledgeHub';
+import api from '../../services/api';
+import {
+  Event as EventType,
+  Message as MessageType,
+  Notification as NotificationType,
+  Post as PostType,
+  User
+} from '../../types';
 
 interface DashboardProps {
-  currentUser: any;
-  setCurrentUser: (user: any) => void;
-}
-
-interface Notification {
-  id: number;
-  type: string;
-  message: string;
-  timestamp: Date;
-  read: boolean;
-}
-
-interface Connection {
-  id: number;
-  from: number;
-  to: number;
-  status: string;
-  timestamp: Date;
-}
-
-interface Event {
-  id: number;
-  createdBy: number;
-  attendees: number[];
-  timestamp: Date;
-  [key: string]: any;
-}
-
-interface Message {
-  id: number;
-  from: number;
-  to: number;
-  content: string;
-  timestamp: Date;
-  read: boolean;
-}
-
-interface Post {
-  id: number;
-  author: any;
-  content: string;
-  type: string;
-  likes: number;
-  comments: any[];
-  timestamp: Date;
-}
-
-interface MentorshipRequest {
-  id: number;
-  mentee: number;
-  mentor: number;
-  topic: string;
-  status: string;
-  timestamp: Date;
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) => {
   const [activeView, setActiveView] = useState('feed');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [users, setUsers] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequest[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [chatUser, setChatUser] = useState<any>(null);
-  const [messageInput, setMessageInput] = useState('');
+  const [feedPosts, setFeedPosts] = useState<FeedItem[]>([]);
+  const [feedLoading, setFeedLoading] = useState(true);
+  const [creatingPost, setCreatingPost] = useState(false);
+
+  const [events, setEvents] = useState<EventCard[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [creatingEvent, setCreatingEvent] = useState(false);
+
+  const [networkSuggestions, setNetworkSuggestions] = useState<NetworkUserCard[]>([]);
+  const [networkLoading, setNetworkLoading] = useState(true);
+
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const [mentors, setMentors] = useState<MentorSuggestion[]>([]);
+  const [mentorshipLoading, setMentorshipLoading] = useState(false);
+
+  const [conversationList, setConversationList] = useState<ConversationPreview[]>([]);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
+  const [messages, setMessages] = useState<MessageType[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messageInput, setMessageInput] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [chatUser, setChatUser] = useState<ConversationPreview['user'] | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    if (currentUser) {
-      const interval = setInterval(() => {
-        const notificationTypes = ['connection_request', 'event_reminder', 'message', 'endorsement'];
-        const randomType = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
-        
-        addNotification({
-          id: Date.now(),
-          type: randomType,
-          message: getNotificationMessage(randomType),
-          timestamp: new Date(),
-          read: false
-        });
-      }, 30000);
+  const createTempId = useCallback(
+    () => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    []
+  );
 
-      return () => clearInterval(interval);
+  const mapPostToFeedItem = useCallback((post: PostType): FeedItem => {
+    const postId = (post as any)._id || post.id || createTempId();
+    const authorUser = typeof post.author === 'string' ? undefined : (post.author as User);
+    return {
+      id: postId,
+      content: post.content,
+      createdAt: post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString(),
+      likes: Array.isArray(post.likes) ? post.likes.length : ((post as any).likes ?? 0),
+      comments: Array.isArray(post.comments) ? post.comments.length : ((post as any).comments?.length ?? 0),
+      author: {
+        id: authorUser?.id || (authorUser as any)?._id || (typeof post.author === 'string' ? post.author : ''),
+        name: authorUser?.profile?.name || 'CampusConnect Member',
+        role: authorUser?.role,
+        avatar: authorUser?.profile?.avatar
+      }
+    };
+  }, [createTempId]);
+
+  const mapEventToCard = useCallback((event: EventType): EventCard => ({
+    id: (event as any)._id || event.id,
+    title: event.title,
+    startDate: event.startDate ? new Date(event.startDate).toISOString() : new Date().toISOString(),
+    endDate: event.endDate ? new Date(event.endDate).toISOString() : undefined,
+    category: event.category,
+    location: event.location,
+    attendeeCount: Array.isArray(event.attendees) ? event.attendees.length : 0,
+    description: event.description || ''
+  }), []);
+
+  const mapNotification = useCallback((notification: any): NotificationType => ({
+    id: notification.id || notification._id || createTempId(),
+    user: notification.user,
+    type: notification.type,
+    title: notification.title,
+    message: notification.message,
+    data: notification.data,
+    read: notification.read,
+    actionUrl: notification.actionUrl,
+    createdAt: notification.createdAt ? new Date(notification.createdAt) : new Date()
+  }), [createTempId]);
+
+  const mapMessage = useCallback((message: any): MessageType => ({
+    id: message.id || message._id || createTempId(),
+    from: typeof message.from === 'string' ? message.from : message.from?._id || message.from?.id,
+    to: typeof message.to === 'string' ? message.to : message.to?._id || message.to?.id,
+    content: message.content,
+    read: message.read ?? false,
+    createdAt: message.createdAt ? new Date(message.createdAt) : new Date()
+  }), [createTempId]);
+
+  const ensureCurrentUser = useCallback(async () => {
+    if (currentUser) return;
+    try {
+      const user = await api.getCurrentUser();
+      setCurrentUser(user);
+    } catch (error) {
+      console.error('Failed to load current user', error);
+    }
+  }, [currentUser, setCurrentUser]);
+
+  useEffect(() => {
+    void ensureCurrentUser();
+  }, [ensureCurrentUser]);
+
+  const loadFeed = useCallback(async () => {
+    setFeedLoading(true);
+    try {
+      const { posts } = await api.getFeed();
+      setFeedPosts(posts.map(mapPostToFeedItem));
+    } catch (error) {
+      console.error('Failed to load feed', error);
+      setFeedPosts([]);
+    } finally {
+      setFeedLoading(false);
+    }
+  }, [mapPostToFeedItem]);
+
+  const loadEvents = useCallback(async () => {
+    setEventsLoading(true);
+    try {
+      const eventsResponse = await api.getEvents();
+      setEvents(eventsResponse.map(mapEventToCard));
+    } catch (error) {
+      console.error('Failed to load events', error);
+      setEvents([]);
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [mapEventToCard]);
+
+  const loadNotifications = useCallback(async () => {
+    setNotificationsLoading(true);
+    try {
+      const { notifications: notificationList } = await api.getNotifications(1);
+      setNotifications(notificationList.map(mapNotification));
+    } catch (error) {
+      console.error('Failed to load notifications', error);
+      setNotifications([]);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [mapNotification]);
+
+  const loadNetwork = useCallback(async () => {
+    if (!currentUser) return;
+    setNetworkLoading(true);
+    try {
+      const { users } = await api.getUsers(25, 0);
+      const suggestions = users
+        .filter((user) => user.id !== currentUser.id && !currentUser.connections?.includes(user.id))
+        .map<NetworkUserCard>((user) => ({
+          id: user.id,
+          name: user.profile?.name || 'CampusConnect Member',
+          role: user.role,
+          avatar: user.profile?.avatar,
+          company: user.profile?.company,
+          department: user.profile?.major,
+          headline: user.careerGoals,
+          skills: user.profile?.skills || []
+        }));
+      setNetworkSuggestions(suggestions);
+    } catch (error) {
+      console.error('Failed to load network suggestions', error);
+      setNetworkSuggestions([]);
+    } finally {
+      setNetworkLoading(false);
     }
   }, [currentUser]);
 
-  const getNotificationMessage = (type: string) => {
-    const messages: Record<string, string> = {
-      connection_request: 'New connection request from an alumnus',
-      event_reminder: 'Upcoming event: Tech Career Fair in 2 hours',
-      message: 'You have a new message',
-      endorsement: 'Someone endorsed your React.js skill'
-    };
-    return messages[type];
-  };
+  const loadMentors = useCallback(async () => {
+    if (!currentUser) return;
+    setMentorshipLoading(true);
+    try {
+      const recommendations = await api.getRecommendedMentors(currentUser.id);
+      const normalized = recommendations.map<MentorSuggestion>(({ mentor, matchScore, reason }) => ({
+        id: mentor.id,
+        name: mentor.profile?.name || 'Mentor',
+        role: mentor.role,
+        avatar: mentor.profile?.avatar,
+        company: mentor.profile?.company,
+        expertise: mentor.profile?.skills || [],
+        availability: mentor.mentorProfile?.isAvailable ? 'Available' : 'Limited',
+        matchScore: Math.round(matchScore * 100),
+        reason
+      }));
+      setMentors(normalized);
+    } catch (error) {
+      console.error('Failed to load mentor recommendations', error);
+      setMentors([]);
+    } finally {
+      setMentorshipLoading(false);
+    }
+  }, [currentUser]);
 
-  const addNotification = (notification: any) => {
-    setNotifications(prev => [notification, ...prev].slice(0, 20));
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setNotifications([]);
-  };
-
-  const sendConnectionRequest = (userId: number) => {
-    setConnections(prev => [...prev, {
-      id: Date.now(),
-      from: currentUser.id,
-      to: userId,
-      status: 'pending',
-      timestamp: new Date()
-    }]);
-    
-    addNotification({
-      id: Date.now(),
-      type: 'connection_sent',
-      message: 'Connection request sent successfully',
-      timestamp: new Date(),
-      read: false
-    });
-  };
-
-  const createPost = (content: string, type = 'update') => {
-    const newPost = {
-      id: Date.now(),
-      author: currentUser,
-      content,
-      type,
-      likes: 0,
-      comments: [],
-      timestamp: new Date()
-    };
-    
-    setPosts(prev => [newPost, ...prev]);
-  };
-
-  const createEvent = (eventData: any) => {
-    const newEvent = {
-      id: Date.now(),
-      ...eventData,
-      createdBy: currentUser.id,
-      attendees: [],
-      timestamp: new Date()
-    };
-    
-    setEvents(prev => [...prev, newEvent]);
-    addNotification({
-      id: Date.now(),
-      type: 'event_created',
-      message: 'Event created successfully',
-      timestamp: new Date(),
-      read: false
-    });
-  };
-
-  const rsvpEvent = (eventId: number) => {
-    setEvents(prev => prev.map(event => 
-      event.id === eventId 
-        ? { ...event, attendees: [...event.attendees, currentUser.id] }
-        : event
-    ));
-    
-    addNotification({
-      id: Date.now(),
-      type: 'event_rsvp',
-      message: 'Successfully registered for event',
-      timestamp: new Date(),
-      read: false
-    });
-  };
-
-  const requestMentorship = (mentorId: number, topic: string) => {
-    const request = {
-      id: Date.now(),
-      mentee: currentUser.id,
-      mentor: mentorId,
-      topic,
-      status: 'pending',
-      timestamp: new Date()
-    };
-    
-    setMentorshipRequests(prev => [...prev, request]);
-    addNotification({
-      id: Date.now(),
-      type: 'mentorship_request',
-      message: 'Mentorship request sent',
-      timestamp: new Date(),
-      read: false
-    });
-  };
-
-  const sendMessage = () => {
-    if (!messageInput.trim() || !chatUser) return;
-    
-    const newMessage = {
-      id: Date.now(),
-      from: currentUser.id,
-      to: chatUser.id,
-      content: messageInput,
-      timestamp: new Date(),
-      read: false
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-    setMessageInput('');
-    
-    setTimeout(() => {
-      addNotification({
-        id: Date.now(),
-        type: 'message_delivered',
-        message: 'Message delivered',
-        timestamp: new Date(),
-        read: false
+  const loadConversations = useCallback(async () => {
+    setConversationsLoading(true);
+    try {
+      const conversations = await api.getConversationList();
+      const normalized: ConversationPreview[] = conversations.map((conversation: any) => {
+        const otherParticipant =
+          conversation.from &&
+          (conversation.from._id?.toString?.() || conversation.from.id) !== currentUser?.id
+            ? conversation.from
+            : conversation.to;
+        const user = {
+          id: otherParticipant?._id?.toString() || otherParticipant?.id || '',
+          name: otherParticipant?.profile?.name || 'Member',
+          avatar: otherParticipant?.profile?.avatar
+        };
+        return {
+          id: conversation.conversationId || conversation._id || `${user.id}-${conversation.createdAt}`,
+          user,
+          lastMessage: conversation.content || '',
+          timestamp: conversation.createdAt,
+          unread:
+            conversation.to?.id === currentUser?.id || conversation.to?._id?.toString() === currentUser?.id
+              ? conversation.read === false
+                ? 1
+                : 0
+              : 0
+        };
       });
-    }, 500);
-  };
+      setConversationList(normalized);
+    } catch (error) {
+      console.error('Failed to load conversations', error);
+      setConversationList([]);
+    } finally {
+      setConversationsLoading(false);
+    }
+  }, [currentUser?.id]);
+
+  const loadMessagesForUser = useCallback(async (userId: string) => {
+    setMessagesLoading(true);
+    try {
+      const messagesResponse = await api.getMessagesForUser(userId);
+      setMessages(messagesResponse.map(mapMessage));
+    } catch (error) {
+      console.error('Failed to load messages', error);
+      setMessages([]);
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, [mapMessage]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    void loadFeed();
+    void loadEvents();
+    void loadNotifications();
+    void loadNetwork();
+    void loadMentors();
+    void loadConversations();
+  }, [currentUser, loadFeed, loadEvents, loadNotifications, loadNetwork, loadMentors, loadConversations]);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await api.logout();
+    } catch (error) {
+      console.error('Failed to logout', error);
+    } finally {
+      setCurrentUser(null);
+      setNotifications([]);
+    }
+  }, [setCurrentUser]);
+
+  const handleCreatePost = useCallback(
+    async (content: string) => {
+      if (!currentUser) return;
+      setCreatingPost(true);
+      try {
+        const post = await api.createPost({ content, type: 'status' });
+        setFeedPosts((prev) => [mapPostToFeedItem(post), ...prev]);
+      } catch (error) {
+        console.error('Failed to create post', error);
+      } finally {
+        setCreatingPost(false);
+      }
+    },
+    [currentUser, mapPostToFeedItem]
+  );
+
+  const handleLikePost = useCallback(async (postId: string) => {
+    try {
+      const likes = await api.likePost(postId);
+      setFeedPosts((prev) =>
+        prev.map((post) => (post.id === postId ? { ...post, likes } : post))
+      );
+    } catch (error) {
+      console.error('Failed to like post', error);
+    }
+  }, []);
+
+  const handleCreateEvent = useCallback(
+    async (eventData: {
+      title: string;
+      description?: string;
+      startDate: string;
+      endDate?: string;
+      location: string;
+      category?: string;
+      isVirtual?: boolean;
+      virtualLink?: string;
+    }) => {
+      setCreatingEvent(true);
+      try {
+        const allowedCategories: Array<EventType['category']> = [
+          'Career',
+          'Academic',
+          'Cultural',
+          'Networking',
+          'Workshop',
+          'Other'
+        ];
+        const category = allowedCategories.includes(eventData.category as EventType['category'])
+          ? (eventData.category as EventType['category'])
+          : undefined;
+        const payload: Partial<EventType> = {
+          title: eventData.title,
+          description: eventData.description,
+          startDate: new Date(eventData.startDate),
+          endDate: eventData.endDate ? new Date(eventData.endDate) : undefined,
+          location: eventData.location,
+          category,
+          isVirtual: eventData.isVirtual,
+          virtualLink: eventData.virtualLink
+        };
+        const event = await api.createEvent(payload);
+        setEvents((prev) => [mapEventToCard(event), ...prev]);
+      } catch (error) {
+        console.error('Failed to create event', error);
+      } finally {
+        setCreatingEvent(false);
+      }
+    },
+    [mapEventToCard]
+  );
+
+  const handleRsvp = useCallback(
+    async (eventId: string) => {
+      try {
+        const updatedEvent = await api.rsvpEvent(eventId, 'going');
+        setEvents((prev) =>
+          prev.map((event) =>
+            event.id === ((updatedEvent as any)._id || updatedEvent.id)
+              ? mapEventToCard(updatedEvent)
+              : event
+          )
+        );
+      } catch (error) {
+        console.error('Failed to RSVP to event', error);
+      }
+    },
+    [mapEventToCard]
+  );
+
+  const handleConnect = useCallback(
+    async (userId: string) => {
+      try {
+        await api.sendConnectionRequest(userId);
+        await Promise.all([loadNetwork(), loadNotifications()]);
+      } catch (error) {
+        console.error('Failed to send connection request', error);
+      }
+    },
+    [loadNetwork, loadNotifications]
+  );
+
+  const handleMarkAllNotificationsRead = useCallback(async () => {
+    try {
+      await api.markAllNotificationsRead();
+      setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })));
+    } catch (error) {
+      console.error('Failed to mark notifications as read', error);
+    }
+  }, []);
+
+  const handleRequestMentorship = useCallback(
+    async (mentorId: string, topic: string) => {
+      try {
+        await api.requestMentorship(mentorId, topic, [topic]);
+        await loadMentors();
+      } catch (error) {
+        console.error('Failed to request mentorship', error);
+      }
+    },
+    [loadMentors]
+  );
+
+  const handleSelectConversation = useCallback(
+    async (conversation: ConversationPreview) => {
+      setChatUser(conversation.user);
+      setActiveView('messages');
+      await loadMessagesForUser(conversation.user.id);
+    },
+    [loadMessagesForUser]
+  );
+
+  const handleStartMessage = useCallback(
+    (user: NetworkUserCard) => {
+      const conversation: ConversationPreview = {
+        id: user.id,
+        user: {
+          id: user.id,
+          name: user.name,
+          avatar: user.avatar
+        },
+        lastMessage: '',
+        timestamp: new Date().toISOString(),
+        unread: 0
+      };
+
+      setConversationList((prev) => {
+        if (prev.some((entry) => entry.user.id === user.id)) {
+          return prev;
+        }
+        return [conversation, ...prev];
+      });
+
+      setChatUser(conversation.user);
+      setActiveView('messages');
+      void loadMessagesForUser(user.id);
+    },
+    [loadMessagesForUser]
+  );
+
+  const handleSendMessage = useCallback(async () => {
+    if (!chatUser || !messageInput.trim()) return;
+    setSendingMessage(true);
+    try {
+      const message = await api.sendMessage(chatUser.id, messageInput.trim());
+      const normalized = mapMessage(message);
+      setMessages((prev) => [...prev, normalized]);
+      setMessageInput('');
+      await loadConversations();
+    } catch (error) {
+      console.error('Failed to send message', error);
+    } finally {
+      setSendingMessage(false);
+    }
+  }, [chatUser, messageInput, mapMessage, loadConversations]);
+
+  const handleProfileUpdate = useCallback(
+    async (updates: Partial<User>) => {
+      if (!currentUser) return;
+      try {
+        const updatedUser = await api.updateProfile(currentUser.id, updates);
+        setCurrentUser(updatedUser);
+      } catch (error) {
+        console.error('Failed to update profile', error);
+      }
+    },
+    [currentUser, setCurrentUser]
+  );
+
+  const badgeList = useMemo(() => currentUser?.gamification?.badges || [], [currentUser]);
 
   return (
     <>
       <Header
         currentUser={currentUser}
-        handleLogout={handleLogout}
+        onLogout={handleLogout}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         notifications={notifications}
@@ -252,24 +489,71 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
         setShowNotifications={setShowNotifications}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
+        onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
       />
       <div className="flex bg-gray-50 min-h-screen">
-        <Sidebar
-          activeView={activeView}
-          setActiveView={setActiveView}
-          sidebarOpen={sidebarOpen}
-        />
+        <Sidebar activeView={activeView} setActiveView={setActiveView} sidebarOpen={sidebarOpen} />
         <main className="flex-1 p-6 animate-fade-in">
-          {activeView === 'feed' && <Feed currentUser={currentUser} posts={posts} createPost={createPost} />}
+          {activeView === 'feed' && (
+            <Feed
+              currentUser={currentUser}
+              posts={feedPosts}
+              onCreatePost={handleCreatePost}
+              onLikePost={handleLikePost}
+              loading={feedLoading || creatingPost}
+            />
+          )}
           {activeView === 'knowledge' && <KnowledgeHub currentUser={currentUser} />}
-          {activeView === 'network' && <Network currentUser={currentUser} sendConnectionRequest={sendConnectionRequest} setChatUser={setChatUser} setActiveView={setActiveView} />}
-          {activeView === 'events' && <Events events={events} rsvpEvent={rsvpEvent} createEvent={createEvent} />}
-          {activeView === 'mentorship' && <Mentorship requestMentorship={requestMentorship} />}
-          {activeView === 'messages' && <Messages currentUser={currentUser} messages={messages} chatUser={chatUser} setChatUser={setChatUser} messageInput={messageInput} setMessageInput={setMessageInput} sendMessage={sendMessage} />}
+          {activeView === 'network' && (
+            <Network
+              suggestions={networkSuggestions}
+              onConnect={handleConnect}
+              onStartMessage={handleStartMessage}
+              loading={networkLoading}
+            />
+          )}
+          {activeView === 'events' && (
+            <Events
+              events={events}
+              onRsvp={handleRsvp}
+              onCreateEvent={handleCreateEvent}
+              loading={eventsLoading}
+              creating={creatingEvent}
+            />
+          )}
+          {activeView === 'mentorship' && (
+            <Mentorship
+              mentors={mentors}
+              loading={mentorshipLoading}
+              onRequestMentorship={handleRequestMentorship}
+              onRefresh={() => void loadMentors()}
+            />
+          )}
+          {activeView === 'messages' && (
+            <Messages
+              currentUser={currentUser}
+              conversations={conversationList}
+              selectedUser={chatUser}
+              onSelectConversation={handleSelectConversation}
+              messages={messages}
+              messageInput={messageInput}
+              onMessageInputChange={setMessageInput}
+              onSendMessage={handleSendMessage}
+              loadingConversations={conversationsLoading}
+              loadingMessages={messagesLoading}
+              sendingMessage={sendingMessage}
+            />
+          )}
           {activeView === 'groups' && <GroupsPage currentUser={currentUser} />}
-          {activeView === 'leaderboard' && <Leaderboard currentUserId={currentUser.id} />}
-          {activeView === 'badges' && <BadgeShowcase badges={currentUser.gamification?.badges || []} allBadges={[]} />}
-          {activeView === 'profile' && <Profile currentUser={currentUser} setCurrentUser={setCurrentUser} posts={posts} addNotification={addNotification} />}
+          {activeView === 'leaderboard' && <Leaderboard currentUserId={currentUser?.id || ''} />}
+          {activeView === 'badges' && <BadgeShowcase badges={badgeList} allBadges={[]} />}
+          {activeView === 'profile' && (
+            <Profile
+              currentUser={currentUser}
+              postsCount={feedPosts.length}
+              onUpdateProfile={handleProfileUpdate}
+            />
+          )}
         </main>
       </div>
     </>

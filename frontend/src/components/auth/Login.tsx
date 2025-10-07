@@ -207,7 +207,7 @@ const Login: React.FC<LoginProps> = ({ setCurrentUser, onSwitchToRegister }) => 
 
               <p className="text-center text-sm text-gray-500">
                 <Sparkles className="w-4 h-4 inline mr-1" />
-                Demo Mode - Enter any credentials to explore
+                Enter your credentials to explore
               </p>
             </div>
           </div>

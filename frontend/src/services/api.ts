@@ -1,15 +1,16 @@
-import { 
-  User, 
-  Post, 
-  Event, 
-  Mentorship, 
-  Connection, 
-  Message, 
-  Notification, 
+import {
+  User,
+  Post,
+  Event,
+  Mentorship,
+  Connection,
+  Message,
+  Notification,
   Group,
   SkillGap,
   Analytics,
-  KnowledgePost
+  KnowledgePost,
+  Comment
 } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -99,18 +100,21 @@ class ApiService {
 
   // ==================== USERS ====================
   async getCurrentUser(): Promise<User> {
-    return this.request<User>('/users/me');
+    const { user } = await this.request<{ user: User }>('/auth/me');
+    return user;
   }
 
   async getUserById(userId: string): Promise<User> {
-    return this.request<User>(`/users/${userId}`);
+    const { user } = await this.request<{ user: User }>(`/users/${userId}`);
+    return user;
   }
 
   async updateProfile(userId: string, updates: Partial<User>): Promise<User> {
-    return this.request<User>(`/users/${userId}`, {
+    const { user } = await this.request<{ user: User }>(`/users/${userId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
     });
+    return user;
   }
 
   async searchUsers(query: string, filters?: {
@@ -119,8 +123,9 @@ class ApiService {
     skills?: string[];
     graduationYear?: string;
   }): Promise<User[]> {
-    const params = new URLSearchParams({ q: query, ...filters as any });
-    return this.request<User[]>(`/users/search?${params}`);
+    const params = new URLSearchParams({ q: query, ...(filters as any) });
+    const { users } = await this.request<{ users: User[] }>(`/users/search?${params.toString()}`);
+    return users;
   }
 
   async getUsers(limit = 20, offset = 0): Promise<{ users: User[]; total: number }> {
@@ -128,26 +133,31 @@ class ApiService {
   }
 
   // ==================== CONNECTIONS ====================
-  async getConnections(userId: string): Promise<Connection[]> {
-    return this.request<Connection[]>(`/users/${userId}/connections`);
+  async getConnections(): Promise<Connection[]> {
+    const { connections } = await this.request<{ connections: Connection[] }>(`/connections`);
+    return connections;
   }
 
   async sendConnectionRequest(targetUserId: string, message?: string): Promise<Connection> {
-    return this.request<Connection>('/connections/request', {
+    const { connection } = await this.request<{ connection: Connection }>('/connections/request', {
       method: 'POST',
-      body: JSON.stringify({ targetUserId, message }),
+      body: JSON.stringify({ to: targetUserId, message }),
     });
+    return connection;
   }
 
   async acceptConnectionRequest(connectionId: string): Promise<Connection> {
-    return this.request<Connection>(`/connections/${connectionId}/accept`, {
+    const { connection } = await this.request<{ connection: Connection }>(`/connections/${connectionId}`, {
       method: 'PUT',
+      body: JSON.stringify({ status: 'accepted' })
     });
+    return connection;
   }
 
   async rejectConnectionRequest(connectionId: string): Promise<void> {
     await this.request<void>(`/connections/${connectionId}`, {
-      method: 'DELETE',
+      method: 'PUT',
+      body: JSON.stringify({ status: 'rejected' })
     });
   }
 
@@ -159,60 +169,66 @@ class ApiService {
   }
 
   // ==================== POSTS ====================
-  async getPosts(filters?: { type?: string; tags?: string[] }): Promise<Post[]> {
-    const params = new URLSearchParams(filters as any);
-    return this.request<Post[]>(`/posts?${params}`);
+  async getFeed(page = 1, limit = 20): Promise<{ posts: Post[]; page: number; hasMore: boolean }> {
+    return this.request<{ posts: Post[]; page: number; hasMore: boolean }>(`/posts/feed?page=${page}&limit=${limit}`);
   }
 
   async createPost(postData: Partial<Post>): Promise<Post> {
-    return this.request<Post>('/posts', {
+    const { post } = await this.request<{ message: string; post: Post }>('/posts', {
       method: 'POST',
       body: JSON.stringify(postData),
     });
+    return post;
   }
 
-  async likePost(postId: string): Promise<Post> {
-    return this.request<Post>(`/posts/${postId}/like`, {
+  async likePost(postId: string): Promise<number> {
+    const { likes } = await this.request<{ likes: number }>(`/posts/${postId}/like`, {
       method: 'POST',
     });
+    return likes;
   }
 
-  async commentOnPost(postId: string, content: string): Promise<Post> {
-    return this.request<Post>(`/posts/${postId}/comment`, {
+  async commentOnPost(postId: string, content: string): Promise<Comment[]> {
+    const { comments } = await this.request<{ comments: any[] }>(`/posts/${postId}/comment`, {
       method: 'POST',
       body: JSON.stringify({ content }),
     });
+    return comments;
   }
 
   // ==================== EVENTS ====================
   async getEvents(filters?: { category?: string; upcoming?: boolean }): Promise<Event[]> {
     const params = new URLSearchParams(filters as any);
-    return this.request<Event[]>(`/events?${params}`);
+    const { events } = await this.request<{ events: Event[] }>(`/events?${params.toString()}`);
+    return events;
   }
 
   async createEvent(eventData: Partial<Event>): Promise<Event> {
-    return this.request<Event>('/events', {
+    const { event } = await this.request<{ message: string; event: Event }>('/events', {
       method: 'POST',
       body: JSON.stringify(eventData),
     });
+    return event;
   }
 
   async rsvpEvent(eventId: string, status: 'going' | 'interested' | 'not_going'): Promise<Event> {
-    return this.request<Event>(`/events/${eventId}/rsvp`, {
+    const { event } = await this.request<{ message: string; event: Event }>(`/events/${eventId}/rsvp`, {
       method: 'POST',
       body: JSON.stringify({ status }),
     });
+    return event;
   }
 
-  async submitEventFeedback(eventId: string, rating: number, feedback: string): Promise<Event> {
-    return this.request<Event>(`/events/${eventId}/feedback`, {
+  async submitEventFeedback(eventId: string, rating: number, feedback: string): Promise<void> {
+    await this.request<{ message: string }>(`/events/${eventId}/feedback`, {
       method: 'POST',
       body: JSON.stringify({ rating, feedback }),
     });
   }
 
   async getRecommendedEvents(userId: string): Promise<Event[]> {
-    return this.request<Event[]>(`/events/recommended/${userId}`);
+    const { events } = await this.request<{ events: Event[] }>(`/events/recommended/${userId}`);
+    return events;
   }
 
   // ==================== MENTORSHIP ====================
@@ -232,28 +248,37 @@ class ApiService {
   }
 
   // ==================== MESSAGES ====================
-  async getConversations(userId: string): Promise<any[]> {
-    return this.request<any[]>(`/messages/conversations/${userId}`);
+  async getConversationList(): Promise<any[]> {
+    const { conversations } = await this.request<{ conversations: any[] }>(`/messages/conversations/list`);
+    return conversations;
   }
 
-  async getMessages(conversationId: string): Promise<Message[]> {
-    return this.request<Message[]>(`/messages/${conversationId}`);
+  async getMessagesForUser(userId: string): Promise<Message[]> {
+    const { messages } = await this.request<{ messages: Message[] }>(`/messages/${userId}`);
+    return messages;
   }
 
-  async sendMessage(conversationId: string, content: string): Promise<Message> {
-    return this.request<Message>('/messages', {
+  async sendMessage(to: string, content: string): Promise<Message> {
+    const { data } = await this.request<{ message: string; data: Message }>('/messages', {
       method: 'POST',
-      body: JSON.stringify({ conversationId, content }),
+      body: JSON.stringify({ to, content }),
     });
+    return data;
   }
 
   // ==================== NOTIFICATIONS ====================
-  async getNotifications(userId: string): Promise<Notification[]> {
-    return this.request<Notification[]>(`/notifications/${userId}`);
+  async getNotifications(page = 1): Promise<{ notifications: Notification[]; unreadCount: number; hasMore: boolean }> {
+    return this.request<{ notifications: Notification[]; unreadCount: number; hasMore: boolean }>(`/notifications?page=${page}`);
   }
 
   async markNotificationRead(notificationId: string): Promise<void> {
     await this.request<void>(`/notifications/${notificationId}/read`, {
+      method: 'PUT',
+    });
+  }
+
+  async markAllNotificationsRead(): Promise<void> {
+    await this.request<void>('/notifications/read-all', {
       method: 'PUT',
     });
   }

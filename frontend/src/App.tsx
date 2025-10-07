@@ -5,9 +5,10 @@ import Register from './components/auth/Register';
 import Dashboard from './components/dashboard/Dashboard';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
+import { User } from './types';
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showRegister, setShowRegister] = useState(false);
 
   const handleLoginSuccess = (user: any) => {

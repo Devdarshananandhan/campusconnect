@@ -1,29 +1,36 @@
 import React from 'react';
-import { Search, Bell, LogOut, Users, Menu, X } from 'lucide-react';
+import { Search, Bell, LogOut, Users, Menu, X, CheckCheck } from 'lucide-react';
+import { Notification, User } from '../../types';
 
 interface HeaderProps {
-  currentUser: any;
-  handleLogout: () => void;
+  currentUser: User | null;
+  onLogout: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  notifications: any[];
+  notifications: Notification[];
   showNotifications: boolean;
   setShowNotifications: (show: boolean) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  onMarkAllNotificationsRead: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
   currentUser,
-  handleLogout,
+  onLogout,
   searchQuery,
   setSearchQuery,
   notifications,
   showNotifications,
   setShowNotifications,
   sidebarOpen,
-  setSidebarOpen
+  setSidebarOpen,
+  onMarkAllNotificationsRead
 }) => {
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const avatar = currentUser?.profile?.avatar ||
+    `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser?.profile?.name || 'User')}`;
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,26 +62,29 @@ const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+              aria-label="Toggle notifications"
             >
               <Bell className="w-6 h-6" />
-              {notifications.filter(n => !n.read).length > 0 && (
+              {unreadCount > 0 && (
                 <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {notifications.filter(n => !n.read).length}
+                  {unreadCount}
                 </span>
               )}
             </button>
 
             <div className="flex items-center space-x-2">
               <img
-                src={currentUser?.avatar}
+                src={avatar}
                 alt="Profile"
                 className="w-8 h-8 rounded-full border-2 border-blue-600"
               />
-              <span className="hidden md:block text-sm font-medium">{currentUser?.name}</span>
+              <span className="hidden md:block text-sm font-medium">
+                {currentUser?.profile?.name || 'Member'}
+              </span>
             </div>
 
             <button
-              onClick={handleLogout}
+              onClick={onLogout}
               className="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
               aria-label="Logout"
               title="Logout"
@@ -87,18 +97,28 @@ const Header: React.FC<HeaderProps> = ({
 
       {showNotifications && (
         <div className="absolute right-4 top-16 w-80 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50">
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
             <h3 className="font-semibold text-gray-900">Notifications</h3>
+            {notifications.length > 0 && (
+              <button
+                type="button"
+                onClick={onMarkAllNotificationsRead}
+                className="text-xs text-blue-600 hover:text-blue-700 flex items-center space-x-1"
+              >
+                <CheckCheck className="w-4 h-4" />
+                <span>Mark all read</span>
+              </button>
+            )}
           </div>
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-gray-500">No notifications</div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {notifications.map(notif => (
-                <div key={notif.id} className={`p-4 hover:bg-gray-50 ${!notif.read ? 'bg-blue-50' : ''}`}>
+              {notifications.map((notif) => (
+                <div key={notif.id ?? notif.createdAt} className={`p-4 hover:bg-gray-50 ${!notif.read ? 'bg-blue-50' : ''}`}>
                   <p className="text-sm text-gray-900">{notif.message}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {new Date(notif.timestamp).toLocaleTimeString()}
+                    {new Date(notif.createdAt).toLocaleString()}
                   </p>
                 </div>
               ))}

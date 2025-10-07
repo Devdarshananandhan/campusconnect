@@ -464,6 +464,8 @@ const KnowledgeHub: React.FC<KnowledgeHubProps> = ({ currentUser }) => {
                   type="button"
                   onClick={handleAddTag}
                   className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                  aria-label="Add tag"
+                  title="Add tag"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -472,7 +474,7 @@ const KnowledgeHub: React.FC<KnowledgeHubProps> = ({ currentUser }) => {
                 {formData.tags.map((tag) => (
                   <span key={tag} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full flex items-center space-x-1">
                     <span>{tag}</span>
-                    <button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-blue-900">
+                    <button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-blue-900" aria-label={`Remove tag ${tag}`} title="Remove tag">
                       <Minus className="w-3 h-3" />
                     </button>
                   </span>
@@ -498,6 +500,8 @@ const KnowledgeHub: React.FC<KnowledgeHubProps> = ({ currentUser }) => {
                   type="button"
                   onClick={handleAddSkill}
                   className="px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors"
+                  aria-label="Add skill"
+                  title="Add skill"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -507,7 +511,7 @@ const KnowledgeHub: React.FC<KnowledgeHubProps> = ({ currentUser }) => {
                   <span key={skill} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full flex items-center space-x-1">
                     <Code className="w-3 h-3" />
                     <span>{skill}</span>
-                    <button type="button" onClick={() => handleRemoveSkill(skill)} className="hover:text-purple-900">
+                    <button type="button" onClick={() => handleRemoveSkill(skill)} className="hover:text-purple-900" aria-label={`Remove skill ${skill}`} title="Remove skill">
                       <Minus className="w-3 h-3" />
                     </button>
                   </span>
@@ -533,6 +537,8 @@ const KnowledgeHub: React.FC<KnowledgeHubProps> = ({ currentUser }) => {
                   type="button"
                   onClick={handleAddCourse}
                   className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                  aria-label="Add course code"
+                  title="Add course code"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -542,7 +548,7 @@ const KnowledgeHub: React.FC<KnowledgeHubProps> = ({ currentUser }) => {
                   <span key={course} className="px-3 py-1 bg-green-100 text-green-700 rounded-full flex items-center space-x-1">
                     <GraduationCap className="w-3 h-3" />
                     <span>{course}</span>
-                    <button type="button" onClick={() => handleRemoveCourse(course)} className="hover:text-green-900">
+                    <button type="button" onClick={() => handleRemoveCourse(course)} className="hover:text-green-900" aria-label={`Remove course ${course}`} title="Remove course">
                       <Minus className="w-3 h-3" />
                     </button>
                   </span>
