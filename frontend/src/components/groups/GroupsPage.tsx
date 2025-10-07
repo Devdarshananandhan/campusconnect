@@ -32,72 +32,7 @@ const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser }) => {
       setGroups(data);
     } catch (error) {
       console.error('Failed to load groups:', error);
-      // Mock data for demo
-      setGroups([
-        {
-          id: '1',
-          name: 'Computer Science Club',
-          description: 'A community for CS students to collaborate on projects, share knowledge, and prepare for careers in tech.',
-          type: 'club',
-          privacy: 'public',
-          creator: currentUser.id,
-          admins: [currentUser.id],
-          members: [
-            { user: currentUser.id, role: 'admin', joinedAt: new Date() },
-          ],
-          pendingRequests: [],
-          tags: ['Programming', 'Web Development', 'AI/ML'],
-          rules: ['Be respectful', 'No spam', 'Help each other grow'],
-          posts: [],
-          events: [],
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as Group,
-        {
-          id: '2',
-          name: 'Data Science Research Group',
-          description: 'Exploring the latest in machine learning, data analytics, and AI applications.',
-          type: 'research',
-          privacy: 'private',
-          creator: '2',
-          admins: ['2'],
-          members: [
-            { user: '2', role: 'admin', joinedAt: new Date() },
-            { user: '3', role: 'member', joinedAt: new Date() },
-          ],
-          pendingRequests: [],
-          tags: ['Machine Learning', 'Python', 'Research'],
-          rules: ['Active participation required', 'Share research findings'],
-          posts: [],
-          events: [],
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as Group,
-        {
-          id: '3',
-          name: 'Software Engineering Career Prep',
-          description: 'Preparing for technical interviews and building career skills together.',
-          type: 'career',
-          privacy: 'public',
-          creator: '4',
-          admins: ['4'],
-          members: Array(45).fill(null).map((_, i) => ({
-            user: `user-${i}`,
-            role: 'member' as const,
-            joinedAt: new Date(),
-          })),
-          pendingRequests: [],
-          tags: ['Interview Prep', 'Leetcode', 'System Design'],
-          rules: ['Practice daily', 'Share interview experiences', 'Support each other'],
-          posts: [],
-          events: [],
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as Group,
-      ]);
+      setGroups([]);
     } finally {
       setLoading(false);
     }
@@ -107,23 +42,10 @@ const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser }) => {
     try {
       const newGroup = await api.createGroup(groupData);
       setGroups([newGroup, ...groups]);
+      setShowCreateModal(false);
     } catch (error) {
       console.error('Failed to create group:', error);
-      // For demo, add locally
-      const mockGroup: Group = {
-        id: Date.now().toString(),
-        ...groupData,
-        creator: currentUser.id,
-        admins: [currentUser.id],
-        members: [{ user: currentUser.id, role: 'admin', joinedAt: new Date() }],
-        pendingRequests: [],
-        posts: [],
-        events: [],
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Group;
-      setGroups([mockGroup, ...groups]);
+      alert('Failed to create group. Please try again.');
     }
   };
 

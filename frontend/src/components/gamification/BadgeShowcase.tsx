@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trophy, Award, Star, TrendingUp, Medal, Crown, Target, Zap } from 'lucide-react';
 import { Badge as BadgeType } from '../../types';
+import api from '../../services/api';
 
 interface BadgeCardProps {
   badge: BadgeType;
@@ -80,15 +81,52 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ badge, unlocked, progress 
 };
 
 interface BadgeShowcaseProps {
-  badges: BadgeType[];
-  allBadges?: BadgeType[];
+  userId: string;
 }
 
-export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({ badges, allBadges = [] }) => {
-  const unlockedBadges = badges.filter((b) => b.earnedAt);
+export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({ userId }) => {
+  const [earnedBadges, setEarnedBadges] = useState<any[]>([]);
+  const [allBadges, setAllBadges] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadBadges();
+  }, [userId]);
+
+  const loadBadges = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getBadges(userId);
+      setEarnedBadges(data.earned || []);
+      setAllBadges(data.available || []);
+    } catch (error) {
+      console.error('Failed to load badges:', error);
+      setEarnedBadges([]);
+      setAllBadges([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const unlockedBadges = earnedBadges;
   const lockedBadges = allBadges.filter(
-    (b) => !badges.find((ub) => ub.id === b.id)
+    (b) => !earnedBadges.find((ub) => ub.name === b.name)
   );
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 bg-gray-100 rounded-2xl"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -111,8 +149,8 @@ export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({ badges, allBadges 
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Unlocked</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {unlockedBadges.map((badge) => (
-              <BadgeCard key={badge.id} badge={badge} unlocked={true} />
+            {unlockedBadges.map((badge, index) => (
+              <BadgeCard key={badge.name || index} badge={badge} unlocked={true} />
             ))}
           </div>
         </div>
@@ -123,8 +161,8 @@ export const BadgeShowcase: React.FC<BadgeShowcaseProps> = ({ badges, allBadges 
         <div>
           <h3 className="text-lg font-semibold text-gray-500 mb-4">Locked</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {lockedBadges.map((badge) => (
-              <BadgeCard key={badge.id} badge={badge} unlocked={false} progress={0} />
+            {lockedBadges.map((badge, index) => (
+              <BadgeCard key={badge.name || badge.id || index} badge={badge} unlocked={false} progress={0} />
             ))}
           </div>
         </div>

@@ -1,9 +1,10 @@
 import express, { Response } from 'express';
 import { isAuthenticated } from '../middleware/auth';
 import Notification from '../models/Notification';
-import { app } from '../server';
 
-app.get('/api/notifications', isAuthenticated, async (req: any, res: Response) => {
+const router = express.Router();
+
+router.get('/', isAuthenticated, async (req: any, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = 20;
@@ -27,7 +28,7 @@ app.get('/api/notifications', isAuthenticated, async (req: any, res: Response) =
 });
 
 // Mark notification as read
-app.put('/api/notifications/:id/read', isAuthenticated, async (req: any, res: Response) => {
+router.put('/:id/read', isAuthenticated, async (req: any, res: Response) => {
   try {
     await Notification.findByIdAndUpdate(req.params.id, { read: true });
     res.json({ message: 'Notification marked as read' });
@@ -37,7 +38,7 @@ app.put('/api/notifications/:id/read', isAuthenticated, async (req: any, res: Re
 });
 
 // Mark all as read
-app.put('/api/notifications/read-all', isAuthenticated, async (req: any, res: Response) => {
+router.put('/read-all', isAuthenticated, async (req: any, res: Response) => {
   try {
     await Notification.updateMany(
       { user: req.user._id, read: false },
@@ -48,3 +49,5 @@ app.put('/api/notifications/read-all', isAuthenticated, async (req: any, res: Re
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+export default router;

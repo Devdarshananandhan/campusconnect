@@ -286,24 +286,28 @@ class ApiService {
   // ==================== GROUPS ====================
   async getGroups(filters?: { type?: string; privacy?: string }): Promise<Group[]> {
     const params = new URLSearchParams(filters as any);
-    return this.request<Group[]>(`/groups?${params}`);
+    const data = await this.request<{ groups: Group[] }>(`/groups?${params}`);
+    return data.groups;
   }
 
   async getGroupById(groupId: string): Promise<Group> {
-    return this.request<Group>(`/groups/${groupId}`);
+    const data = await this.request<{ group: Group }>(`/groups/${groupId}`);
+    return data.group;
   }
 
   async createGroup(groupData: Partial<Group>): Promise<Group> {
-    return this.request<Group>('/groups', {
+    const data = await this.request<{ group: Group }>('/groups', {
       method: 'POST',
       body: JSON.stringify(groupData),
     });
+    return data.group;
   }
 
   async joinGroup(groupId: string): Promise<Group> {
-    return this.request<Group>(`/groups/${groupId}/join`, {
+    const data = await this.request<{ group: Group }>(`/groups/${groupId}/join`, {
       method: 'POST',
     });
+    return data.group;
   }
 
   // ==================== SKILL GAP ====================
@@ -332,6 +336,10 @@ class ApiService {
     rank: number;
   }>> {
     return this.request<Array<{ user: User; score: number; rank: number }>>(`/gamification/leaderboard/${type}?limit=${limit}`);
+  }
+
+  async getBadges(userId: string): Promise<{ earned: any[]; available: any[] }> {
+    return this.request<{ earned: any[]; available: any[] }>(`/gamification/${userId}/badges`);
   }
 
   // ==================== ANALYTICS ====================

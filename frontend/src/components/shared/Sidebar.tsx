@@ -5,9 +5,10 @@ interface SidebarProps {
   activeView: string;
   setActiveView: (view: string) => void;
   sidebarOpen: boolean;
+  unreadMessages?: number;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpen, unreadMessages = 0 }) => {
   const menuItems = [
     { id: 'feed', label: 'Feed', icon: TrendingUp },
     { id: 'knowledge', label: 'Knowledge Hub', icon: BookOpen },
@@ -39,8 +40,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
             >
               <Icon className={`w-5 h-5 ${isActive ? 'text-primary-600' : ''}`} />
               <span className="font-medium">{item.label}</span>
-              {item.id === 'messages' && (
-                <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">3</span>
+              {item.id === 'messages' && unreadMessages > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{unreadMessages}</span>
               )}
             </button>
           );

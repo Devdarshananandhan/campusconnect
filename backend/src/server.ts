@@ -28,6 +28,9 @@ import connectionRoutes, { setSocketIO as setConnectionSocketIO } from './routes
 import mentorshipRoutes, { setSocketIO as setMentorshipSocketIO } from './routes/mentorship';
 import messageRoutes, { setSocketIO as setMessageSocketIO } from './routes/messages';
 import knowledgeRoutes from './routes/knowledge';
+import groupRoutes from './routes/groups';
+import gamificationRoutes from './routes/gamification';
+import notificationRoutes from './routes/notification';
 
 // Initialize Express App
 const app: Application = express();
@@ -102,6 +105,9 @@ app.use('/api/connections', connectionRoutes);
 app.use('/api/mentorship', mentorshipRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/gamification', gamificationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {

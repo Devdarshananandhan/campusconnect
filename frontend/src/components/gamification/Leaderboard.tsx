@@ -30,33 +30,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, type = 
       setLeaderboard(data);
     } catch (error) {
       console.error('Failed to load leaderboard:', error);
-      // Mock data for demo
-      setLeaderboard([
-        {
-          user: {
-            id: '1',
-            profile: { name: 'Alex Chen', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alex' },
-          } as User,
-          score: 2450,
-          rank: 1,
-        },
-        {
-          user: {
-            id: '2',
-            profile: { name: 'Sarah Johnson', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah' },
-          } as User,
-          score: 2100,
-          rank: 2,
-        },
-        {
-          user: {
-            id: '3',
-            profile: { name: 'Michael Brown', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=michael' },
-          } as User,
-          score: 1850,
-          rank: 3,
-        },
-      ]);
+      setLeaderboard([]);
     } finally {
       setLoading(false);
     }

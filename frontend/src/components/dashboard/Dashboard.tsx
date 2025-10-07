@@ -475,7 +475,10 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
     [currentUser, setCurrentUser]
   );
 
-  const badgeList = useMemo(() => currentUser?.gamification?.badges || [], [currentUser]);
+  // Calculate unread messages count
+  const unreadMessagesCount = useMemo(() => {
+    return conversationList.reduce((total, conversation) => total + (conversation.unread || 0), 0);
+  }, [conversationList]);
 
   return (
     <>
@@ -492,7 +495,12 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
         onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
       />
       <div className="flex bg-gray-50 min-h-screen">
-        <Sidebar activeView={activeView} setActiveView={setActiveView} sidebarOpen={sidebarOpen} />
+        <Sidebar 
+          activeView={activeView} 
+          setActiveView={setActiveView} 
+          sidebarOpen={sidebarOpen} 
+          unreadMessages={unreadMessagesCount}
+        />
         <main className="flex-1 p-6 animate-fade-in">
           {activeView === 'feed' && (
             <Feed
@@ -546,7 +554,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
           )}
           {activeView === 'groups' && <GroupsPage currentUser={currentUser} />}
           {activeView === 'leaderboard' && <Leaderboard currentUserId={currentUser?.id || ''} />}
-          {activeView === 'badges' && <BadgeShowcase badges={badgeList} allBadges={[]} />}
+          {activeView === 'badges' && currentUser && <BadgeShowcase userId={currentUser.id} />}
           {activeView === 'profile' && (
             <Profile
               currentUser={currentUser}
