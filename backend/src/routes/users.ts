@@ -6,6 +6,28 @@ import Notification from '../models/Notification';
 
 const router = Router();
 
+// Get users list with pagination
+router.get('/', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 25;
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const users = await User.find({ isActive: true })
+      .select('-password')
+      .skip(offset)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const total = await User.countDocuments({ isActive: true });
+
+    res.json({ users, total, limit, offset });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.get('/:id', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.params.id)

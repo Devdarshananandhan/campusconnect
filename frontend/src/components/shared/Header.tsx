@@ -13,6 +13,7 @@ interface HeaderProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   onMarkAllNotificationsRead: () => void;
+  activeView?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -25,11 +26,32 @@ const Header: React.FC<HeaderProps> = ({
   setShowNotifications,
   sidebarOpen,
   setSidebarOpen,
-  onMarkAllNotificationsRead
+  onMarkAllNotificationsRead,
+  activeView
 }) => {
   const unreadCount = notifications.filter((n) => !n.read).length;
   const avatar = currentUser?.profile?.avatar ||
     `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser?.profile?.name || 'User')}`;
+
+  // Context-aware search placeholder
+  const getSearchPlaceholder = () => {
+    switch (activeView) {
+      case 'network':
+        return 'Search users, skills, companies...';
+      case 'events':
+        return 'Search events, workshops, hackathons...';
+      case 'groups':
+        return 'Search groups, communities, projects...';
+      case 'knowledge':
+        return 'Search posts, topics, skills...';
+      case 'mentorship':
+        return 'Search mentors, expertise, industries...';
+      case 'messages':
+        return 'Search conversations...';
+      default:
+        return 'Search users, skills, events...';
+    }
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -52,7 +74,7 @@ const Header: React.FC<HeaderProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search users, skills, events..."
+                placeholder={getSearchPlaceholder()}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>

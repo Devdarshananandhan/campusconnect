@@ -268,4 +268,258 @@ router.delete('/:id', isAuthenticated, async (req: any, res: Response) => {
   }
 });
 
+// @route   POST /api/groups/:id/posts
+// @desc    Create a post in a group
+// @access  Private (Members only)
+router.post('/:id/posts', isAuthenticated, async (req: any, res: Response) => {
+  try {
+    const group = await Group.findById(req.params.id);
+
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    const userId = req.user!._id;
+    const isMember = group.members.some((m: any) => m.user.toString() === userId);
+
+    if (!isMember) {
+      return res.status(403).json({ error: 'Only members can post in this group' });
+    }
+
+    const Post = require('../models/Post').default;
+    const newPost = new Post({
+      content: req.body.content,
+      author: userId,
+      attachments: req.body.attachments || [],
+      group: group._id,
+      createdAt: new Date()
+    });
+
+    await newPost.save();
+    group.posts.push(newPost._id as any);
+    await group.save();
+
+    const populatedPost = await Post.findById(newPost._id)
+      .populate('author', 'profile.name profile.avatar role');
+
+    res.status(201).json({ message: 'Post created successfully', post: populatedPost });
+  } catch (error: any) {
+    console.error('Error creating group post:', error);
+    res.status(500).json({ error: 'Failed to create post', details: error.message });
+  }
+});
+
+// @route   GET /api/groups/:id/posts
+// @desc    Get all posts in a group
+// @access  Private (Members only)
+router.get('/:id/posts', isAuthenticated, async (req: any, res: Response) => {
+  try {
+    const group = await Group.findById(req.params.id);
+
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    const userId = req.user!._id;
+    const isMember = group.members.some((m: any) => m.user.toString() === userId);
+
+    if (!isMember && group.privacy === 'private') {
+      return res.status(403).json({ error: 'Only members can view posts in private groups' });
+    }
+
+    const Post = require('../models/Post').default;
+    const posts = await Post.find({ _id: { $in: group.posts } })
+      .populate('author', 'profile.name profile.avatar role')
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.json({ posts });
+  } catch (error: any) {
+    console.error('Error fetching group posts:', error);
+    res.status(500).json({ error: 'Failed to fetch posts', details: error.message });
+  }
+});
+
+// @route   GET /api/groups/:id/members
+// @desc    Get all members of a group
+// @access  Private
+router.get('/:id/members', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const group = await Group.findById(req.params.id)
+      .populate('members.user', 'profile.name profile.avatar profile.bio profile.company role email');
+
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    res.json({ members: group.members });
+  } catch (error: any) {
+    console.error('Error fetching group members:', error);
+    res.status(500).json({ error: 'Failed to fetch members', details: error.message });
+  }
+});
+
+// @route   PUT /api/groups/:id/members/:userId
+// @desc    Update member role (Admin only)
+// @access  Private
+router.put('/:id/members/:userId', isAuthenticated, async (req: any, res: Response) => {
+  try {
+    const group = await Group.findById(req.params.id);
+
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    const currentUserId = req.user!._id;
+    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId) || 
+                    group.creator.toString() === currentUserId;
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only admins can update member roles' });
+    }
+
+    const member = group.members.find((m: any) => m.user.toString() === req.params.userId);
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    member.role = req.body.role || member.role;
+
+    // Update admins array if role changed to admin
+    if (req.body.role === 'admin') {
+      if (!group.admins.some((a: any) => a.toString() === req.params.userId)) {
+        group.admins.push(req.params.userId as any);
+      }
+    } else {
+      group.admins = group.admins.filter((a: any) => a.toString() !== req.params.userId);
+    }
+
+    await group.save();
+
+    const updatedGroup = await Group.findById(group._id)
+      .populate('members.user', 'profile.name profile.avatar role');
+
+    res.json({ message: 'Member role updated successfully', group: updatedGroup });
+  } catch (error: any) {
+    console.error('Error updating member role:', error);
+    res.status(500).json({ error: 'Failed to update member role', details: error.message });
+  }
+});
+
+// @route   DELETE /api/groups/:id/members/:userId
+// @desc    Remove a member from group (Admin only)
+// @access  Private
+router.delete('/:id/members/:userId', isAuthenticated, async (req: any, res: Response) => {
+  try {
+    const group = await Group.findById(req.params.id);
+
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    const currentUserId = req.user!._id;
+    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId) || 
+                    group.creator.toString() === currentUserId;
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only admins can remove members' });
+    }
+
+    if (group.creator.toString() === req.params.userId) {
+      return res.status(400).json({ error: 'Cannot remove the group creator' });
+    }
+
+    group.members = group.members.filter((m: any) => m.user.toString() !== req.params.userId);
+    group.admins = group.admins.filter((a: any) => a.toString() !== req.params.userId);
+
+    await group.save();
+
+    res.json({ message: 'Member removed successfully' });
+  } catch (error: any) {
+    console.error('Error removing member:', error);
+    res.status(500).json({ error: 'Failed to remove member', details: error.message });
+  }
+});
+
+// @route   POST /api/groups/:id/requests/:requestId/approve
+// @desc    Approve a join request (Admin only)
+// @access  Private
+router.post('/:id/requests/:requestId/approve', isAuthenticated, async (req: any, res: Response) => {
+  try {
+    const group = await Group.findById(req.params.id);
+
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    const currentUserId = req.user!._id;
+    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId) || 
+                    group.creator.toString() === currentUserId;
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only admins can approve join requests' });
+    }
+
+    const request = group.pendingRequests.find((r: any) => r._id.toString() === req.params.requestId);
+    if (!request) {
+      return res.status(404).json({ error: 'Join request not found' });
+    }
+
+    // Add user to members
+    group.members.push({
+      user: request.user,
+      role: 'member',
+      joinedAt: new Date()
+    });
+
+    // Remove from pending requests
+    group.pendingRequests = group.pendingRequests.filter(
+      (r: any) => r._id.toString() !== req.params.requestId
+    );
+
+    await group.save();
+
+    const updatedGroup = await Group.findById(group._id)
+      .populate('members.user', 'profile.name profile.avatar')
+      .populate('pendingRequests.user', 'profile.name profile.avatar');
+
+    res.json({ message: 'Join request approved', group: updatedGroup });
+  } catch (error: any) {
+    console.error('Error approving join request:', error);
+    res.status(500).json({ error: 'Failed to approve request', details: error.message });
+  }
+});
+
+// @route   DELETE /api/groups/:id/requests/:requestId
+// @desc    Reject a join request (Admin only)
+// @access  Private
+router.delete('/:id/requests/:requestId', isAuthenticated, async (req: any, res: Response) => {
+  try {
+    const group = await Group.findById(req.params.id);
+
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    const currentUserId = req.user!._id;
+    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId) || 
+                    group.creator.toString() === currentUserId;
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only admins can reject join requests' });
+    }
+
+    group.pendingRequests = group.pendingRequests.filter(
+      (r: any) => r._id.toString() !== req.params.requestId
+    );
+
+    await group.save();
+
+    res.json({ message: 'Join request rejected' });
+  } catch (error: any) {
+    console.error('Error rejecting join request:', error);
+    res.status(500).json({ error: 'Failed to reject request', details: error.message });
+  }
+});
+
 export default router;

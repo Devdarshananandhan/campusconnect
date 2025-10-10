@@ -47,7 +47,18 @@ const postSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: function (doc, ret) {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  }
+});
 
 postSchema.index({ author: 1, createdAt: -1 });
 postSchema.index({ type: 1, createdAt: -1 });

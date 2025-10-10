@@ -122,7 +122,11 @@ export const GroupList: React.FC<GroupListProps> = ({
   loading = false,
 }) => {
   const isMember = (group: Group) => {
-    return group.members?.some((member) => member.user.toString() === currentUserId) || false;
+    return group.members?.some((member) => {
+      // Handle both populated (object) and unpopulated (string) user field
+      const userId = typeof member.user === 'string' ? member.user : (member.user as any)?._id || (member.user as any)?.id;
+      return userId === currentUserId;
+    }) || false;
   };
 
   if (loading) {

@@ -3,19 +3,22 @@ import { Plus, Search, Filter, TrendingUp } from 'lucide-react';
 import { Group } from '../../types';
 import { GroupList } from '../groups/GroupList';
 import CreateGroupModal from '../groups/CreateGroupModal';
+import GroupDetailPage from '../groups/GroupDetailPage';
 import api from '../../services/api';
 
 interface GroupsPageProps {
   currentUser: any;
+  onMessageUser?: (userId: string) => void;
 }
 
-const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser }) => {
+const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser, onMessageUser }) => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterPrivacy, setFilterPrivacy] = useState<string>('all');
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   useEffect(() => {
     loadGroups();
@@ -59,9 +62,31 @@ const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser }) => {
   };
 
   const handleViewGroup = (groupId: string) => {
-    // Navigate to group detail page
-    console.log('Viewing group:', groupId);
+    setSelectedGroupId(groupId);
   };
+
+  const handleBackToList = () => {
+    setSelectedGroupId(null);
+    loadGroups(); // Refresh the groups list
+  };
+
+  const handleMessageUser = (userId: string) => {
+    if (onMessageUser) {
+      onMessageUser(userId);
+    }
+  };
+
+  // Show group detail page if a group is selected
+  if (selectedGroupId) {
+    return (
+      <GroupDetailPage
+        groupId={selectedGroupId}
+        currentUser={currentUser}
+        onBack={handleBackToList}
+        onMessageUser={handleMessageUser}
+      />
+    );
+  }
 
   const filteredGroups = groups.filter((group) =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -115,7 +140,10 @@ const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser }) => {
           </div>
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50">
             <div className="text-3xl font-bold text-secondary-600">
-              {groups.filter((g) => g.members?.some((m) => m.user.toString() === currentUser.id)).length}
+              {groups.filter((g) => g.members?.some((m) => {
+                const userId = typeof m.user === 'string' ? m.user : (m.user as any)?._id || (m.user as any)?.id;
+                return userId === currentUser.id;
+              })).length}
             </div>
             <div className="text-sm text-gray-600">Your Groups</div>
           </div>

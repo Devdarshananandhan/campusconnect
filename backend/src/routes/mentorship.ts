@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { isAuthenticated } from '../middleware/auth';
 import Mentorship from '../models/Mentorship';
 import Notification from '../models/Notification';
+import User from '../models/User';
 
 const router = Router();
 let io: any;
@@ -9,6 +10,59 @@ let io: any;
 export const setSocketIO = (socketIO: any) => {
   io = socketIO;
 };
+
+// Get recommended mentors based on user's career goals and skills
+router.get('/recommended/:userId', isAuthenticated, async (req: any, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Find potential mentors (alumni or faculty with mentor profiles)
+    const mentors = await User.find({
+      _id: { $ne: userId }, // Exclude current user
+      isActive: true,
+      role: { $in: ['alumni', 'faculty'] },
+      'mentorProfile.isAvailable': true
+    })
+      .select('-password')
+      .limit(10)
+      .lean();
+
+    // Simple scoring based on skill matches
+    const recommendations = mentors.map((mentor: any) => {
+      let matchScore = 0;
+      
+      // Score based on matching skills
+      const userSkills = user.profile?.skills || [];
+      const mentorSkills = mentor.profile?.skills || [];
+      const mentorExpertise = mentor.mentorProfile?.expertiseAreas || [];
+      
+      const skillMatches = userSkills.filter((skill: string) => 
+        mentorExpertise.includes(skill) || mentorSkills.includes(skill)
+      );
+      
+      matchScore = (skillMatches.length / Math.max(userSkills.length, 1)) * 100;
+      
+      return {
+        mentor,
+        matchScore: Math.round(matchScore),
+        reason: skillMatches.length > 0 
+          ? `Expertise in ${skillMatches.slice(0, 3).join(', ')}`
+          : 'Experienced professional in your field'
+      };
+    })
+      .sort((a, b) => b.matchScore - a.matchScore);
+
+    res.json({ recommendations });
+  } catch (error) {
+    console.error('Error getting recommended mentors:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 router.post('/request', isAuthenticated, async (req: any, res: Response) => {
   try {

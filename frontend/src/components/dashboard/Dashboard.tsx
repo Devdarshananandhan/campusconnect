@@ -56,6 +56,11 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Clear search when changing views
+  useEffect(() => {
+    setSearchQuery('');
+  }, [activeView]);
+
   const createTempId = useCallback(
     () => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
     []
@@ -446,6 +451,24 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
     [loadMessagesForUser]
   );
 
+  const handleMessageUserById = useCallback(
+    async (userId: string) => {
+      try {
+        // Fetch user details
+        const userData = await api.getUserById(userId);
+        handleStartMessage({
+          id: userData.id || (userData as any)._id,
+          name: userData.profile?.name || 'User',
+          avatar: userData.profile?.avatar || '',
+          skills: []
+        });
+      } catch (error) {
+        console.error('Failed to fetch user details:', error);
+      }
+    },
+    [handleStartMessage]
+  );
+
   const handleSendMessage = useCallback(async () => {
     if (!chatUser || !messageInput.trim()) return;
     setSendingMessage(true);
@@ -493,6 +516,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+        activeView={activeView}
       />
       <div className="flex bg-gray-50 min-h-screen">
         <Sidebar 
@@ -552,7 +576,15 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
               sendingMessage={sendingMessage}
             />
           )}
-          {activeView === 'groups' && <GroupsPage currentUser={currentUser} />}
+          {activeView === 'groups' && (
+            <GroupsPage 
+              currentUser={currentUser} 
+              onMessageUser={(userId) => {
+                setActiveView('messages');
+                void handleMessageUserById(userId);
+              }}
+            />
+          )}
           {activeView === 'leaderboard' && <Leaderboard currentUserId={currentUser?.id || ''} />}
           {activeView === 'badges' && currentUser && <BadgeShowcase userId={currentUser.id} />}
           {activeView === 'profile' && (

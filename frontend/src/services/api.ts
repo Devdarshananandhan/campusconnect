@@ -310,6 +310,71 @@ class ApiService {
     return data.group;
   }
 
+  async leaveGroup(groupId: string): Promise<void> {
+    await this.request<void>(`/groups/${groupId}/leave`, {
+      method: 'POST',
+    });
+  }
+
+  async updateGroup(groupId: string, updates: Partial<Group>): Promise<Group> {
+    const data = await this.request<{ group: Group }>(`/groups/${groupId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    return data.group;
+  }
+
+  async deleteGroup(groupId: string): Promise<void> {
+    await this.request<void>(`/groups/${groupId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async createGroupPost(groupId: string, content: string, attachments?: string[]): Promise<Post> {
+    const data = await this.request<{ post: Post }>(`/groups/${groupId}/posts`, {
+      method: 'POST',
+      body: JSON.stringify({ content, attachments }),
+    });
+    return data.post;
+  }
+
+  async getGroupPosts(groupId: string): Promise<Post[]> {
+    const data = await this.request<{ posts: Post[] }>(`/groups/${groupId}/posts`);
+    return data.posts;
+  }
+
+  async getGroupMembers(groupId: string): Promise<any[]> {
+    const data = await this.request<{ members: any[] }>(`/groups/${groupId}/members`);
+    return data.members;
+  }
+
+  async updateMemberRole(groupId: string, userId: string, role: string): Promise<Group> {
+    const data = await this.request<{ group: Group }>(`/groups/${groupId}/members/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ role }),
+    });
+    return data.group;
+  }
+
+  async removeMember(groupId: string, userId: string): Promise<void> {
+    await this.request<void>(`/groups/${groupId}/members/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async approveJoinRequest(groupId: string, requestId: string): Promise<Group> {
+    const data = await this.request<{ group: Group }>(`/groups/${groupId}/requests/${requestId}/approve`, {
+      method: 'POST',
+    });
+    return data.group;
+  }
+
+  async rejectJoinRequest(groupId: string, requestId: string): Promise<void> {
+    await this.request<void>(`/groups/${groupId}/requests/${requestId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // ==================== SKILL GAP ====================
   async analyzeSkillGap(userId: string, careerGoal: string): Promise<SkillGap> {
     return this.request<SkillGap>('/skillgap/analyze', {
@@ -434,6 +499,106 @@ class ApiService {
 
   async getTrendingKnowledgePosts(): Promise<{ posts: KnowledgePost[] }> {
     return this.request<{ posts: KnowledgePost[] }>('/knowledge/trending');
+  }
+
+  // ==================== UNIFIED SEARCH ====================
+  async unifiedSearch(params: {
+    q: string;
+    type?: 'all' | 'users' | 'groups' | 'events' | 'knowledge';
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    users?: User[];
+    groups?: Group[];
+    events?: Event[];
+    knowledgePosts?: KnowledgePost[];
+    total: number;
+  }> {
+    const queryString = new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = String(value);
+        }
+        return acc;
+      }, {} as Record<string, string>)
+    ).toString();
+    
+    return this.request(`/search?${queryString}`);
+  }
+
+  async searchUsersNew(params: {
+    q: string;
+    role?: string;
+    department?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ users: User[]; total: number }> {
+    const queryString = new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = String(value);
+        }
+        return acc;
+      }, {} as Record<string, string>)
+    ).toString();
+    
+    return this.request(`/search/users?${queryString}`);
+  }
+
+  async searchGroupsNew(params: {
+    q: string;
+    type?: string;
+    privacy?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ groups: Group[]; total: number }> {
+    const queryString = new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = String(value);
+        }
+        return acc;
+      }, {} as Record<string, string>)
+    ).toString();
+    
+    return this.request(`/search/groups?${queryString}`);
+  }
+
+  async searchEventsNew(params: {
+    q: string;
+    category?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ events: Event[]; total: number }> {
+    const queryString = new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = String(value);
+        }
+        return acc;
+      }, {} as Record<string, string>)
+    ).toString();
+    
+    return this.request(`/search/events?${queryString}`);
+  }
+
+  async searchKnowledgeNew(params: {
+    q: string;
+    category?: string;
+    company?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ posts: KnowledgePost[]; total: number }> {
+    const queryString = new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = String(value);
+        }
+        return acc;
+      }, {} as Record<string, string>)
+    ).toString();
+    
+    return this.request(`/search/knowledge?${queryString}`);
   }
 }
 
