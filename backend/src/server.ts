@@ -31,6 +31,11 @@ import knowledgeRoutes from './routes/knowledge';
 import groupRoutes from './routes/groups';
 import gamificationRoutes from './routes/gamification';
 import notificationRoutes from './routes/notification';
+import searchRoutes from './routes/search';
+
+// Import services
+import { initializeIndices } from './services/elasticsearch';
+import { searchService } from './services/searchService';
 
 // Initialize Express App
 const app: Application = express();
@@ -108,6 +113,7 @@ app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/search', searchRoutes);
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
@@ -128,6 +134,12 @@ app.use((req: Request, res: Response) => {
 // ============================================================================
 
 const PORT = process.env.PORT || 5000;
+
+// Initialize Elasticsearch and search service
+(async () => {
+  await initializeIndices();
+  await searchService.initialize();
+})();
 
 server.listen(PORT, () => {
   console.log(`
