@@ -14,10 +14,12 @@ import {
   Calendar,
   ExternalLink,
   UserPlus,
+  AlertCircle,
 } from 'lucide-react';
 import { Job, Company } from '../../types';
 import api from '../../services/api';
 import ApplicationForm from './ApplicationForm';
+import { hasPermission } from '../../utils/rolePermissions';
 
 interface JobDetailPageProps {
   jobId: string;
@@ -98,6 +100,10 @@ const JobDetailPage: React.FC<JobDetailPageProps> = ({
       throw error;
     }
   };
+
+  // Check user permissions
+  const canApplyToJobs = currentUser ? hasPermission(currentUser.role, 'canApplyToJobs') : false;
+  const canRequestReferrals = currentUser ? hasPermission(currentUser.role, 'canRequestReferrals') : false;
 
   const formatSalary = (salary: { min: number; max: number; currency: string }) => {
     const formatNumber = (num: number) => {
@@ -352,7 +358,15 @@ const JobDetailPage: React.FC<JobDetailPageProps> = ({
           {/* Apply Card */}
           <div className="card p-6 sticky top-6">
             <div className="space-y-4">
-              {hasApplied ? (
+              {!canApplyToJobs && !canRequestReferrals ? (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                  <AlertCircle className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                  <p className="font-semibold text-blue-800">View Only</p>
+                  <p className="text-sm text-blue-600 mt-1">
+                    Only students and alumni can apply to jobs
+                  </p>
+                </div>
+              ) : hasApplied ? (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center">
                   <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
                   <p className="font-semibold text-green-800">Already Applied</p>
@@ -362,20 +376,24 @@ const JobDetailPage: React.FC<JobDetailPageProps> = ({
                 </div>
               ) : (
                 <>
-                  <button
-                    onClick={() => setShowApplicationForm(true)}
-                    className="btn-primary w-full text-lg py-4"
-                  >
-                    <Send className="w-5 h-5 mr-2" />
-                    Apply Now
-                  </button>
-                  <button
-                    onClick={() => onRequestReferral?.(job.id)}
-                    className="btn-secondary w-full"
-                  >
-                    <UserPlus className="w-5 h-5 mr-2" />
-                    Request Referral
-                  </button>
+                  {canApplyToJobs && (
+                    <button
+                      onClick={() => setShowApplicationForm(true)}
+                      className="btn-primary w-full text-lg py-4"
+                    >
+                      <Send className="w-5 h-5 mr-2" />
+                      Apply Now
+                    </button>
+                  )}
+                  {canRequestReferrals && (
+                    <button
+                      onClick={() => onRequestReferral?.(job.id)}
+                      className="btn-secondary w-full"
+                    >
+                      <UserPlus className="w-5 h-5 mr-2" />
+                      Request Referral
+                    </button>
+                  )}
                 </>
               )}
             </div>
