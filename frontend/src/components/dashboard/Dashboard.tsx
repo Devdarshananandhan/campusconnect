@@ -11,6 +11,9 @@ import GroupsPage from '../groups/GroupsPage';
 import Leaderboard from '../gamification/Leaderboard';
 import { BadgeShowcase } from '../gamification/BadgeShowcase';
 import KnowledgeHub from '../knowledge/KnowledgeHub';
+import JobsPage from '../careers/JobsPage';
+import JobDetailPage from '../careers/JobDetailPage';
+import MyApplicationsPage from '../careers/MyApplicationsPage';
 import api from '../../services/api';
 import {
   Event as EventType,
@@ -55,6 +58,9 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Careers state
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   // Clear search when changing views
   useEffect(() => {
@@ -583,6 +589,30 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
                 setActiveView('messages');
                 void handleMessageUserById(userId);
               }}
+            />
+          )}
+          {activeView === 'careers' && !selectedJobId && (
+            <JobsPage 
+              currentUser={currentUser}
+              onJobClick={(jobId) => setSelectedJobId(jobId)}
+              onCreateJob={() => {
+                // TODO: Implement job creation modal/page
+                alert('Job creation form will be implemented in Phase 5');
+              }}
+            />
+          )}
+          {activeView === 'my-applications' && (
+            <MyApplicationsPage currentUser={currentUser} />
+          )}
+          {activeView === 'careers' && selectedJobId && (
+            <JobDetailPage
+              jobId={selectedJobId}
+              onBack={() => setSelectedJobId(null)}
+              onRequestReferral={(jobId) => {
+                // TODO: Implement referral request modal (Phase 4)
+                alert('Referral request will be implemented in Phase 4');
+              }}
+              currentUser={currentUser}
             />
           )}
           {activeView === 'leaderboard' && <Leaderboard currentUserId={currentUser?.id || ''} />}

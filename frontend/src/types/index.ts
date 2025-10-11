@@ -478,3 +478,143 @@ export interface KnowledgeComment {
   createdAt: Date;
   upvotes: (User | string)[];
 }
+
+// ==================== CAREER PLATFORM TYPES ====================
+
+// Job Types
+export interface Job {
+  id: string;
+  _id?: string;
+  title: string;
+  description: string;
+  company: Company | string;
+  type: 'full-time' | 'part-time' | 'internship' | 'contract' | 'remote';
+  location: string;
+  salary?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  requirements: string[];
+  responsibilities: string[];
+  benefits: string[];
+  skills: string[];
+  experienceLevel: 'entry' | 'mid' | 'senior' | 'lead';
+  department?: string;
+  applicationDeadline?: Date;
+  applyUrl?: string;
+  postedBy: User | string;
+  applications: Application[] | string[];
+  isActive: boolean;
+  featured: boolean;
+  views: number;
+  applicantCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Application Types
+export interface Application {
+  id: string;
+  _id?: string;
+  job: Job | string;
+  applicant: User | string;
+  resume: string;
+  coverLetter: string;
+  status: 'pending' | 'reviewed' | 'shortlisted' | 'interviewing' | 'offered' | 'rejected' | 'withdrawn';
+  statusHistory: StatusChange[];
+  answers?: Record<string, any>;
+  customAnswers?: Record<string, any>;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  availableStartDate?: Date | string;
+  referral?: Referral | string;
+  notes?: string;
+  employerNotes?: string;
+  rating?: number;
+  appliedAt: Date;
+  updatedAt: Date;
+}
+
+export interface StatusChange {
+  status: string;
+  changedBy: User | string;
+  changedAt: Date;
+  notes?: string;
+}
+
+// Company Types
+export interface Company {
+  id: string;
+  _id?: string;
+  name: string;
+  description: string;
+  logo?: string;
+  coverImage?: string;
+  website?: string;
+  industry: string;
+  size: 'startup' | 'small' | 'medium' | 'large' | 'enterprise';
+  location: string;
+  locations?: string[];
+  foundedYear?: number;
+  socialMedia?: {
+    linkedin?: string;
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+  };
+  culture?: {
+    values: string[];
+    benefits: string[];
+    workEnvironment?: string;
+  };
+  alumniEmployees: (User | string)[];
+  followers: (User | string)[];
+  jobs: (Job | string)[];
+  reviews: CompanyReview[];
+  averageRating: number;
+  isVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CompanyReview {
+  id?: string;
+  reviewer: User | string;
+  rating: number;
+  title: string;
+  pros: string;
+  cons: string;
+  advice?: string;
+  position?: string;
+  employmentStatus: 'current' | 'former' | 'intern';
+  isAnonymous: boolean;
+  helpful: number;
+  createdAt: Date;
+}
+
+// Referral Types
+export interface Referral {
+  id: string;
+  _id?: string;
+  job: Job | string;
+  student: User | string;
+  alumnus: User | string;
+  status: 'pending' | 'approved' | 'rejected' | 'used';
+  message: string;
+  relationship: 'classmate' | 'club-member' | 'project-partner' | 'mentor-mentee' | 'other';
+  endorsement?: string;
+  rejectionReason?: string;
+  success?: boolean;
+  requestedAt: Date;
+  respondedAt?: Date;
+  createdAt: Date;
+}
+
+export interface ReferralStats {
+  totalSent: number;
+  totalReceived: number;
+  approvalRate: number;
+  successfulReferrals: number;
+  vouchScore: number;
+}

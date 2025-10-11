@@ -244,7 +244,8 @@ class ApiService {
   }
 
   async getRecommendedMentors(userId: string): Promise<Array<{ mentor: User; matchScore: number; reason: string }>> {
-    return this.request<Array<{ mentor: User; matchScore: number; reason: string }>>(`/mentorships/recommended/${userId}`);
+    const data = await this.request<{ recommendations: Array<{ mentor: User; matchScore: number; reason: string }> }>(`/mentorship/recommended/${userId}`);
+    return data.recommendations;
   }
 
   // ==================== MESSAGES ====================
@@ -599,6 +600,190 @@ class ApiService {
     ).toString();
     
     return this.request(`/search/knowledge?${queryString}`);
+  }
+
+  // ==================== CAREER PLATFORM ====================
+  
+  // Jobs API
+  async getJobs(filters?: {
+    type?: string;
+    location?: string;
+    company?: string;
+    minSalary?: number;
+    maxSalary?: number;
+    search?: string;
+  }): Promise<{ jobs: any[]; total: number }> {
+    const params = new URLSearchParams(filters as any);
+    return this.request<{ jobs: any[]; total: number }>(`/jobs?${params}`);
+  }
+
+  async getJobById(jobId: string): Promise<any> {
+    const data = await this.request<{ job: any }>(`/jobs/${jobId}`);
+    return data.job;
+  }
+
+  async createJob(jobData: any): Promise<any> {
+    const data = await this.request<{ job: any }>('/jobs', {
+      method: 'POST',
+      body: JSON.stringify(jobData),
+    });
+    return data.job;
+  }
+
+  async updateJob(jobId: string, updates: any): Promise<any> {
+    const data = await this.request<{ job: any }>(`/jobs/${jobId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    return data.job;
+  }
+
+  async deleteJob(jobId: string): Promise<void> {
+    await this.request(`/jobs/${jobId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async applyToJob(jobId: string, applicationData: {
+    resume: string;
+    coverLetter: string;
+    answers?: any;
+  }): Promise<any> {
+    const data = await this.request<{ application: any }>(`/jobs/${jobId}/apply`, {
+      method: 'POST',
+      body: JSON.stringify(applicationData),
+    });
+    return data.application;
+  }
+
+  async getJobApplications(jobId: string): Promise<any[]> {
+    const data = await this.request<{ applications: any[] }>(`/jobs/${jobId}/applications`);
+    return data.applications;
+  }
+
+  // Applications API
+  async getMyApplications(): Promise<any[]> {
+    const data = await this.request<{ applications: any[] }>('/applications');
+    return data.applications;
+  }
+
+  async getApplicationById(applicationId: string): Promise<any> {
+    const data = await this.request<{ application: any }>(`/applications/${applicationId}`);
+    return data.application;
+  }
+
+  async updateApplicationStatus(applicationId: string, status: string, notes?: string): Promise<any> {
+    const data = await this.request<{ application: any }>(`/applications/${applicationId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, notes }),
+    });
+    return data.application;
+  }
+
+  async withdrawApplication(applicationId: string): Promise<void> {
+    await this.request(`/applications/${applicationId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Companies API
+  async getCompanies(filters?: {
+    industry?: string;
+    size?: string;
+    location?: string;
+    search?: string;
+  }): Promise<{ companies: any[]; total: number }> {
+    const params = new URLSearchParams(filters as any);
+    return this.request<{ companies: any[]; total: number }>(`/companies?${params}`);
+  }
+
+  async getCompanyById(companyId: string): Promise<any> {
+    const data = await this.request<{ company: any }>(`/companies/${companyId}`);
+    return data.company;
+  }
+
+  async createCompany(companyData: any): Promise<any> {
+    const data = await this.request<{ company: any }>('/companies', {
+      method: 'POST',
+      body: JSON.stringify(companyData),
+    });
+    return data.company;
+  }
+
+  async updateCompany(companyId: string, updates: any): Promise<any> {
+    const data = await this.request<{ company: any }>(`/companies/${companyId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    return data.company;
+  }
+
+  async followCompany(companyId: string): Promise<void> {
+    await this.request(`/companies/${companyId}/follow`, {
+      method: 'POST',
+    });
+  }
+
+  async addCompanyReview(companyId: string, review: {
+    rating: number;
+    title: string;
+    pros: string;
+    cons: string;
+    advice?: string;
+  }): Promise<any> {
+    const data = await this.request<{ review: any }>(`/companies/${companyId}/review`, {
+      method: 'POST',
+      body: JSON.stringify(review),
+    });
+    return data.review;
+  }
+
+  async getCompanyJobs(companyId: string): Promise<any[]> {
+    const data = await this.request<{ jobs: any[] }>(`/companies/${companyId}/jobs`);
+    return data.jobs;
+  }
+
+  // Referrals API
+  async requestReferral(referralData: {
+    job: string;
+    alumnus: string;
+    message: string;
+    relationship: string;
+  }): Promise<any> {
+    const data = await this.request<{ referral: any }>('/referrals/request', {
+      method: 'POST',
+      body: JSON.stringify(referralData),
+    });
+    return data.referral;
+  }
+
+  async getReceivedReferrals(): Promise<any[]> {
+    const data = await this.request<{ referrals: any[] }>('/referrals/received');
+    return data.referrals;
+  }
+
+  async getSentReferrals(): Promise<any[]> {
+    const data = await this.request<{ referrals: any[] }>('/referrals/sent');
+    return data.referrals;
+  }
+
+  async approveReferral(referralId: string, endorsement?: string): Promise<any> {
+    const data = await this.request<{ referral: any }>(`/referrals/${referralId}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ endorsement }),
+    });
+    return data.referral;
+  }
+
+  async rejectReferral(referralId: string, reason?: string): Promise<void> {
+    await this.request(`/referrals/${referralId}/reject`, {
+      method: 'PUT',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async getReferralStats(): Promise<any> {
+    return this.request('/referrals/stats');
   }
 }
 

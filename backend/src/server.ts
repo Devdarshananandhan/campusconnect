@@ -32,6 +32,11 @@ import groupRoutes from './routes/groups';
 import gamificationRoutes from './routes/gamification';
 import notificationRoutes from './routes/notification';
 import searchRoutes from './routes/search';
+// Career Platform Routes
+import jobRoutes from './routes/jobs';
+import companyRoutes from './routes/companies';
+import applicationRoutes from './routes/applications';
+import referralRoutes from './routes/referrals';
 
 // Import services
 import { initializeIndices } from './services/elasticsearch';
@@ -114,6 +119,11 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/search', searchRoutes);
+// Career Platform Routes
+app.use('/api/jobs', jobRoutes);
+app.use('/api/companies', companyRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/referrals', referralRoutes);
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {

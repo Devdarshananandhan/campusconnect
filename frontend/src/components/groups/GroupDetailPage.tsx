@@ -188,30 +188,30 @@ const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-8">
       {/* Header with Cover Image */}
-      <div className={`h-64 bg-gradient-to-br ${getTypeColor(group.type)} relative`}>
+      <div className={`h-48 md:h-64 bg-gradient-to-br ${getTypeColor(group.type)} relative`}>
         <div className="absolute inset-0 bg-black/30"></div>
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
           <button
             onClick={onBack}
-            className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
+            className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg hover:shadow-xl"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 text-gray-900" />
           </button>
           <div className="flex items-center space-x-2">
-            <button className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white transition-colors flex items-center space-x-2">
-              <Share2 className="w-4 h-4" />
-              <span className="text-sm font-medium">Share</span>
+            <button className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white transition-all shadow-lg hover:shadow-xl flex items-center space-x-2">
+              <Share2 className="w-4 h-4 text-gray-700" />
+              <span className="text-sm font-medium text-gray-700">Share</span>
             </button>
             {(isAdmin || isCreator) && (
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
+                className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg hover:shadow-xl"
                 aria-label="Settings"
               >
-                <Settings className="w-5 h-5" />
+                <Settings className="w-5 h-5 text-gray-700" />
               </button>
             )}
           </div>
@@ -219,41 +219,70 @@ const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
       </div>
 
       {/* Group Info */}
-      <div className="max-w-6xl mx-auto px-4 -mt-20">
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
+      <div className="max-w-5xl mx-auto px-4 -mt-16 relative z-20">
+        <div className="card-gradient p-6 md:p-8 mb-6 shadow-xl">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
             <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-2">
-                <h1 className="text-3xl font-bold text-gray-900">{group.name}</h1>
-                {group.privacy === 'private' && <Lock className="w-5 h-5 text-gray-500" />}
-                {group.privacy === 'public' && <Globe className="w-5 h-5 text-gray-500" />}
+              <div className="flex items-center flex-wrap gap-3 mb-3">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 font-display">{group.name}</h1>
+                <div className="flex items-center space-x-2">
+                  {group.privacy === 'private' && (
+                    <span className="flex items-center space-x-1 bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">
+                      <Lock className="w-3 h-3" />
+                      <span>Private</span>
+                    </span>
+                  )}
+                  {group.privacy === 'public' && (
+                    <span className="flex items-center space-x-1 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
+                      <Globe className="w-3 h-3" />
+                      <span>Public</span>
+                    </span>
+                  )}
+                  <span className="bg-gradient-to-r from-primary-100 to-secondary-100 text-primary-700 text-xs font-semibold px-3 py-1 rounded-full capitalize">
+                    {group.type}
+                  </span>
+                </div>
               </div>
-              <p className="text-gray-600 mb-4">{group.description}</p>
-              <div className="flex items-center space-x-6 text-sm text-gray-500">
-                <div className="flex items-center space-x-1">
-                  <Users className="w-4 h-4" />
-                  <span>{group.members?.length || 0} members</span>
+              <p className="text-gray-600 mb-4 leading-relaxed">{group.description}</p>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <div className="p-1.5 bg-primary-100 rounded-lg">
+                    <Users className="w-4 h-4 text-primary-600" />
+                  </div>
+                  <span className="font-medium">{group.members?.length || 0} members</span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <MessageCircle className="w-4 h-4" />
-                  <span>{posts.length} posts</span>
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <div className="p-1.5 bg-secondary-100 rounded-lg">
+                    <MessageCircle className="w-4 h-4 text-secondary-600" />
+                  </div>
+                  <span className="font-medium">{posts.length} posts</span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Calendar className="w-4 h-4" />
-                  <span>Created {new Date(group.createdAt).toLocaleDateString()}</span>
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <div className="p-1.5 bg-accent-100 rounded-lg">
+                    <Calendar className="w-4 h-4 text-accent-600" />
+                  </div>
+                  <span className="font-medium">Created {new Date(group.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-2 md:min-w-[160px]">
               {isMember ? (
                 <>
-                  <button onClick={handleLeaveGroup} className="btn-outline-primary flex items-center">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Leave Group
-                  </button>
+                  {!isCreator && (
+                    <button onClick={handleLeaveGroup} className="btn-outline-danger flex items-center justify-center shadow-md hover:shadow-lg transition-all">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Leave Group
+                    </button>
+                  )}
+                  {isCreator && (
+                    <span className="flex items-center justify-center space-x-2 bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-700 font-semibold px-4 py-2 rounded-xl">
+                      <Shield className="w-5 h-5" />
+                      <span>Creator</span>
+                    </span>
+                  )}
                 </>
               ) : (
-                <button onClick={() => api.joinGroup(groupId).then(loadGroupData)} className="btn-primary flex items-center">
+                <button onClick={() => api.joinGroup(groupId).then(loadGroupData)} className="btn-primary flex items-center justify-center shadow-glow">
                   <UserPlus className="w-4 h-4 mr-2" />
                   Join Group
                 </button>
@@ -263,10 +292,10 @@ const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
 
           {/* Tags */}
           {group.tags && group.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 pt-4 border-t border-white/50">
               {group.tags.map((tag, index) => (
-                <span key={index} className="badge">
-                  {tag}
+                <span key={index} className="badge-gradient">
+                  #{tag}
                 </span>
               ))}
             </div>
@@ -274,32 +303,41 @@ const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-md mb-6">
+        <div className="card shadow-lg mb-6">
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab('posts')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
                   activeTab === 'posts'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Posts
+                <div className="flex items-center space-x-2">
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Posts</span>
+                </div>
               </button>
               <button
                 onClick={() => setActiveTab('members')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
                   activeTab === 'members'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Members ({members.length})
+                <div className="flex items-center space-x-2">
+                  <Users className="w-4 h-4" />
+                  <span>Members</span>
+                  <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                    {members.length}
+                  </span>
+                </div>
               </button>
               <button
                 onClick={() => setActiveTab('about')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
                   activeTab === 'about'
                     ? 'border-primary-600 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -316,25 +354,52 @@ const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
               <div className="space-y-6">
                 {/* Create Post */}
                 {isMember && (
-                  <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="card-gradient p-5 shadow-md animate-fade-in">
+                    <div className="flex items-start space-x-3 mb-3">
+                      <img
+                        src={currentUser.profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                        alt={currentUser.profile?.name}
+                        className="w-10 h-10 rounded-full border-2 border-white shadow-md"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-700 mb-2">
+                          Share something with the group...
+                        </p>
+                      </div>
+                    </div>
                     <textarea
                       value={newPostContent}
                       onChange={(e) => setNewPostContent(e.target.value)}
-                      placeholder="Share something with the group..."
-                      rows={3}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                      placeholder="What's on your mind?"
+                      rows={4}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none transition-all bg-white"
                     />
-                    <div className="flex items-center justify-between mt-3">
-                      <button className="text-gray-500 hover:text-gray-700" aria-label="Attach image">
-                        <ImageIcon className="w-5 h-5" />
-                      </button>
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center space-x-3">
+                        <button 
+                          className="text-gray-500 hover:text-primary-600 transition-colors p-2 hover:bg-primary-50 rounded-lg" 
+                          aria-label="Attach image"
+                          title="Attach image (coming soon)"
+                        >
+                          <ImageIcon className="w-5 h-5" />
+                        </button>
+                      </div>
                       <button
                         onClick={handleCreatePost}
                         disabled={!newPostContent.trim() || postingContent}
-                        className="btn-primary text-sm disabled:opacity-50"
+                        className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all"
                       >
-                        <Send className="w-4 h-4 mr-2" />
-                        {postingContent ? 'Posting...' : 'Post'}
+                        {postingContent ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            Posting...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Post
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -342,84 +407,124 @@ const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
 
                 {/* Posts List */}
                 {posts.length === 0 ? (
-                  <div className="text-center py-12">
-                    <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No posts yet</h3>
-                    <p className="text-gray-600">Be the first to post in this group!</p>
+                  <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-300">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full mb-4">
+                      <MessageCircle className="w-10 h-10 text-primary-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 font-display">No posts yet</h3>
+                    <p className="text-gray-600 mb-4">Be the first to share something with this group!</p>
+                    {isMember && (
+                      <button
+                        onClick={() => setActiveTab('posts')}
+                        className="btn-primary inline-flex items-center"
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        Create First Post
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  posts.map((post) => (
-                    <div key={post.id} className="bg-white border border-gray-200 rounded-xl p-6">
-                      <div className="flex items-start space-x-3">
-                        <img
-                          src={(post.author as any)?.profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                          alt={(post.author as any)?.profile?.name || 'User'}
-                          className="w-10 h-10 rounded-full"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="font-semibold text-gray-900">
-                                {(post.author as any)?.profile?.name || 'User'}
-                              </h4>
-                              <p className="text-sm text-gray-500">
-                                {new Date(post.createdAt).toLocaleString()}
-                              </p>
+                  <div className="space-y-4">
+                    {posts.map((post) => (
+                      <div key={post.id} className="card hover:shadow-lg transition-all duration-300 animate-fade-in">
+                        <div className="flex items-start space-x-4">
+                          <img
+                            src={(post.author as any)?.profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                            alt={(post.author as any)?.profile?.name || 'User'}
+                            className="w-12 h-12 rounded-full border-2 border-white shadow-md flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-bold text-gray-900 hover:text-primary-600 transition-colors">
+                                  {(post.author as any)?.profile?.name || 'User'}
+                                </h4>
+                                <p className="text-sm text-gray-500 flex items-center space-x-2">
+                                  <Calendar className="w-3 h-3" />
+                                  <span>{new Date(post.createdAt).toLocaleString()}</span>
+                                </p>
+                              </div>
+                              <button className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-colors" aria-label="Post options">
+                                <MoreVertical className="w-5 h-5" />
+                              </button>
                             </div>
-                            <button className="text-gray-400 hover:text-gray-600" aria-label="Post options">
-                              <MoreVertical className="w-5 h-5" />
-                            </button>
-                          </div>
-                          <p className="mt-3 text-gray-800 whitespace-pre-wrap">{post.content}</p>
-                          <div className="flex items-center space-x-4 mt-4 text-sm text-gray-500">
-                            <button className="hover:text-primary-600">Like</button>
-                            <button className="hover:text-primary-600">Comment</button>
-                            <button className="hover:text-primary-600">Share</button>
+                            <p className="mt-3 text-gray-800 whitespace-pre-wrap leading-relaxed">{post.content}</p>
+                            <div className="flex items-center space-x-6 mt-4 pt-4 border-t border-gray-100">
+                              <button className="flex items-center space-x-2 text-sm text-gray-600 hover:text-primary-600 transition-colors">
+                                <span className="hover:scale-110 transition-transform">👍</span>
+                                <span className="font-medium">Like</span>
+                              </button>
+                              <button className="flex items-center space-x-2 text-sm text-gray-600 hover:text-primary-600 transition-colors">
+                                <MessageCircle className="w-4 h-4" />
+                                <span className="font-medium">Comment</span>
+                              </button>
+                              <button className="flex items-center space-x-2 text-sm text-gray-600 hover:text-primary-600 transition-colors">
+                                <Share2 className="w-4 h-4" />
+                                <span className="font-medium">Share</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
             )}
 
             {/* Members Tab */}
             {activeTab === 'members' && (
-              <div className="space-y-4">
+              <div className="space-y-6 animate-fade-in">
                 {/* Pending Requests (Admin only) */}
                 {(isAdmin || isCreator) && group.pendingRequests && group.pendingRequests.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Pending Requests</h3>
+                  <div className="mb-8">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <div className="p-2 bg-yellow-100 rounded-lg">
+                        <UserPlus className="w-5 h-5 text-yellow-600" />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900 font-display">Pending Join Requests</h3>
+                      <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full">
+                        {group.pendingRequests.length}
+                      </span>
+                    </div>
                     <div className="space-y-3">
                       {group.pendingRequests.map((request: any) => (
-                        <div key={request._id} className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <img
-                              src={request.user?.profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                              alt={request.user?.profile?.name}
-                              className="w-10 h-10 rounded-full"
-                            />
-                            <div>
-                              <p className="font-medium text-gray-900">{request.user?.profile?.name}</p>
-                              <p className="text-sm text-gray-600">{request.message}</p>
+                        <div key={request._id} className="card-gradient border-2 border-yellow-200 p-4 hover:shadow-lg transition-all">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <img
+                                src={request.user?.profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                                alt={request.user?.profile?.name}
+                                className="w-12 h-12 rounded-full border-2 border-yellow-300 shadow-md"
+                              />
+                              <div>
+                                <p className="font-bold text-gray-900">{request.user?.profile?.name}</p>
+                                {request.message && (
+                                  <p className="text-sm text-gray-600 mt-1 italic">"{request.message}"</p>
+                                )}
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Requested {new Date(request.requestedAt).toLocaleDateString()}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => handleApproveRequest(request._id)}
-                              className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
-                              title="Approve"
-                            >
-                              <CheckCircle className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={() => handleRejectRequest(request._id)}
-                              className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
-                              title="Reject"
-                            >
-                              <XCircle className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => handleApproveRequest(request._id)}
+                                className="flex items-center space-x-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
+                                title="Approve"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                <span>Approve</span>
+                              </button>
+                              <button
+                                onClick={() => handleRejectRequest(request._id)}
+                                className="flex items-center space-x-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
+                                title="Reject"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                <span>Reject</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -428,127 +533,228 @@ const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
                 )}
 
                 {/* Members List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {members.map((member: any) => {
-                    const memberUser = member.user;
-                    const isCurrentUser = memberUser._id === currentUser.id;
-                    const isMemberAdmin = member.role === 'admin';
-                    const isMemberCreator = group.creator?.toString() === memberUser._id || (group.creator as any)?._id === memberUser._id;
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="p-2 bg-primary-100 rounded-lg">
+                        <Users className="w-5 h-5 text-primary-600" />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900 font-display">All Members</h3>
+                      <span className="bg-primary-100 text-primary-700 text-xs font-bold px-2 py-1 rounded-full">
+                        {members.length}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {members.map((member: any) => {
+                      const memberUser = member.user;
+                      const isCurrentUser = memberUser._id === currentUser.id;
+                      const isMemberAdmin = member.role === 'admin';
+                      const isMemberCreator = group.creator?.toString() === memberUser._id || (group.creator as any)?._id === memberUser._id;
 
-                    return (
-                      <div key={memberUser._id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={memberUser.profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                            alt={memberUser.profile?.name}
-                            className="w-12 h-12 rounded-full"
-                          />
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <p className="font-semibold text-gray-900">{memberUser.profile?.name}</p>
-                              {isMemberCreator && <span title="Creator"><Shield className="w-4 h-4 text-yellow-500" /></span>}
-                              {isMemberAdmin && !isMemberCreator && <span title="Admin"><Shield className="w-4 h-4 text-blue-500" /></span>}
+                      return (
+                        <div key={memberUser._id} className="card hover:shadow-xl transition-all duration-300 group">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4 flex-1 min-w-0">
+                              <div className="relative flex-shrink-0">
+                                <img
+                                  src={memberUser.profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                                  alt={memberUser.profile?.name}
+                                  className="w-14 h-14 rounded-full border-2 border-white shadow-md"
+                                />
+                                {isMemberCreator && (
+                                  <div className="absolute -bottom-1 -right-1 p-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full shadow-md" title="Creator">
+                                    <Shield className="w-4 h-4 text-white" />
+                                  </div>
+                                )}
+                                {isMemberAdmin && !isMemberCreator && (
+                                  <div className="absolute -bottom-1 -right-1 p-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full shadow-md" title="Admin">
+                                    <Shield className="w-4 h-4 text-white" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <p className="font-bold text-gray-900 truncate">{memberUser.profile?.name}</p>
+                                  {isCurrentUser && (
+                                    <span className="bg-primary-100 text-primary-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                      You
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 truncate">{memberUser.profile?.bio || memberUser.role}</p>
+                                {memberUser.profile?.company && (
+                                  <p className="text-xs text-gray-500 mt-1 flex items-center space-x-1">
+                                    <span>🏢</span>
+                                    <span className="truncate">{memberUser.profile.company}</span>
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                            <p className="text-sm text-gray-600">{memberUser.profile?.bio || memberUser.role}</p>
-                            {memberUser.profile?.company && (
-                              <p className="text-xs text-gray-500">{memberUser.profile.company}</p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {!isCurrentUser && (
-                            <button
-                              onClick={() => onMessageUser(memberUser._id)}
-                              className="p-2 bg-primary-100 text-primary-600 rounded-lg hover:bg-primary-200"
-                              title="Message"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                            </button>
-                          )}
-                          {(isAdmin || isCreator) && !isCurrentUser && !isMemberCreator && (
-                            <div className="relative">
-                              <button
-                                onClick={() => setShowMemberMenu(showMemberMenu === memberUser._id ? null : memberUser._id)}
-                                className="p-2 hover:bg-gray-100 rounded-lg"
-                                aria-label="Member options"
-                              >
-                                <MoreVertical className="w-4 h-4" />
-                              </button>
-                              {showMemberMenu === memberUser._id && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-10">
-                                  {!isMemberAdmin && (
-                                    <button
-                                      onClick={() => handlePromoteMember(memberUser._id, 'admin')}
-                                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                                    >
-                                      Promote to Admin
-                                    </button>
-                                  )}
-                                  {isMemberAdmin && (
-                                    <button
-                                      onClick={() => handlePromoteMember(memberUser._id, 'member')}
-                                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                                    >
-                                      Demote to Member
-                                    </button>
-                                  )}
+                            <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                              {!isCurrentUser && (
+                                <button
+                                  onClick={() => onMessageUser(memberUser._id)}
+                                  className="p-2.5 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg hover:from-primary-600 hover:to-secondary-600 transition-all shadow-md hover:shadow-lg group-hover:scale-105"
+                                  title="Send Message"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                </button>
+                              )}
+                              {(isAdmin || isCreator) && !isCurrentUser && !isMemberCreator && (
+                                <div className="relative">
                                   <button
-                                    onClick={() => handleRemoveMember(memberUser._id)}
-                                    className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-red-600"
+                                    onClick={() => setShowMemberMenu(showMemberMenu === memberUser._id ? null : memberUser._id)}
+                                    className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors"
+                                    aria-label="Member options"
                                   >
-                                    Remove from Group
+                                    <MoreVertical className="w-4 h-4 text-gray-600" />
                                   </button>
+                                  {showMemberMenu === memberUser._id && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 z-10 overflow-hidden">
+                                      {!isMemberAdmin && (
+                                        <button
+                                          onClick={() => handlePromoteMember(memberUser._id, 'admin')}
+                                          className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 flex items-center space-x-2 transition-colors"
+                                        >
+                                          <Shield className="w-4 h-4 text-blue-600" />
+                                          <span>Promote to Admin</span>
+                                        </button>
+                                      )}
+                                      {isMemberAdmin && (
+                                        <button
+                                          onClick={() => handlePromoteMember(memberUser._id, 'member')}
+                                          className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center space-x-2 transition-colors"
+                                        >
+                                          <Users className="w-4 h-4 text-gray-600" />
+                                          <span>Demote to Member</span>
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => handleRemoveMember(memberUser._id)}
+                                        className="w-full text-left px-4 py-3 hover:bg-red-50 text-sm font-medium text-red-600 flex items-center space-x-2 transition-colors border-t border-gray-100"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                        <span>Remove from Group</span>
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
 
             {/* About Tab */}
             {activeTab === 'about' && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">About this group</h3>
-                  <p className="text-gray-700">{group.description}</p>
+              <div className="space-y-6 animate-fade-in">
+                <div className="card-gradient p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center space-x-2">
+                    <div className="p-2 bg-primary-100 rounded-lg">
+                      <MessageCircle className="w-5 h-5 text-primary-600" />
+                    </div>
+                    <span>About this group</span>
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">{group.description}</p>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Group Type</h3>
-                  <span className="badge capitalize">{group.type}</span>
-                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="card p-6">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Group Type</h3>
+                    <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-primary-100 to-secondary-100 text-primary-700 font-bold px-4 py-2 rounded-xl">
+                      <span className="capitalize">{group.type}</span>
+                    </div>
+                  </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Privacy</h3>
-                  <div className="flex items-center space-x-2">
-                    {group.privacy === 'private' ? <Lock className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
-                    <span className="capitalize">{group.privacy}</span>
+                  <div className="card p-6">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Privacy</h3>
+                    <div className="flex items-center space-x-3">
+                      {group.privacy === 'private' ? (
+                        <div className="flex items-center space-x-2 bg-purple-100 text-purple-700 font-bold px-4 py-2 rounded-xl">
+                          <Lock className="w-4 h-4" />
+                          <span className="capitalize">Private Group</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2 bg-green-100 text-green-700 font-bold px-4 py-2 rounded-xl">
+                          <Globe className="w-4 h-4" />
+                          <span className="capitalize">Public Group</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2">
+                      {group.privacy === 'private' 
+                        ? 'Only members can see group content' 
+                        : 'Anyone can see group content'}
+                    </p>
                   </div>
                 </div>
 
                 {group.rules && group.rules.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Group Rules</h3>
-                    <ul className="list-disc list-inside space-y-1 text-gray-700">
+                  <div className="card p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center space-x-2">
+                      <div className="p-2 bg-accent-100 rounded-lg">
+                        <Shield className="w-5 h-5 text-accent-600" />
+                      </div>
+                      <span>Group Rules</span>
+                    </h3>
+                    <ul className="space-y-3">
                       {group.rules.map((rule, index) => (
-                        <li key={index}>{rule}</li>
+                        <li key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                          <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-primary-100 text-primary-700 rounded-full text-sm font-bold">
+                            {index + 1}
+                          </span>
+                          <span className="text-gray-700 leading-relaxed">{rule}</span>
+                        </li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Created</h3>
-                  <p className="text-gray-700">{new Date(group.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}</p>
+                <div className="card p-6">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Created</h3>
+                  <div className="flex items-center space-x-3">
+                    <div className="p-3 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-xl">
+                      <Calendar className="w-6 h-6 text-primary-600" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-gray-900">
+                        {new Date(group.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {Math.floor((Date.now() - new Date(group.createdAt).getTime()) / (1000 * 60 * 60 * 24))} days ago
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card p-6 bg-gradient-to-br from-primary-50 to-secondary-50 border-2 border-primary-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Group Stats</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl">
+                      <div className="text-3xl font-bold text-primary-600 mb-1">{group.members?.length || 0}</div>
+                      <div className="text-sm text-gray-600 font-medium">Members</div>
+                    </div>
+                    <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl">
+                      <div className="text-3xl font-bold text-secondary-600 mb-1">{posts.length}</div>
+                      <div className="text-sm text-gray-600 font-medium">Posts</div>
+                    </div>
+                    <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl">
+                      <div className="text-3xl font-bold text-accent-600 mb-1">
+                        {group.admins?.length || 0}
+                      </div>
+                      <div className="text-sm text-gray-600 font-medium">Admins</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

@@ -129,7 +129,7 @@ router.post('/:id/join', isAuthenticated, async (req: any, res: Response) => {
     }
 
     const userId = req.user!._id;
-    const isMember = group.members.some((m: any) => m.user.toString() === userId);
+    const isMember = group.members.some((m: any) => m.user.toString() === userId.toString());
 
     if (isMember) {
       return res.status(400).json({ error: 'You are already a member of this group' });
@@ -137,7 +137,7 @@ router.post('/:id/join', isAuthenticated, async (req: any, res: Response) => {
 
     if (group.privacy === 'private') {
       // Add to pending requests
-      const alreadyRequested = group.pendingRequests.some((r: any) => r.user.toString() === userId);
+      const alreadyRequested = group.pendingRequests.some((r: any) => r.user.toString() === userId.toString());
       if (alreadyRequested) {
         return res.status(400).json({ error: 'You have already requested to join this group' });
       }
@@ -186,12 +186,12 @@ router.post('/:id/leave', isAuthenticated, async (req: any, res: Response) => {
 
     const userId = req.user!._id;
 
-    if (group.creator.toString() === userId) {
+    if (group.creator.toString() === userId.toString()) {
       return res.status(400).json({ error: 'Creator cannot leave the group. Transfer ownership first.' });
     }
 
-    group.members = group.members.filter((m: any) => m.user.toString() !== userId);
-    group.admins = group.admins.filter((a: any) => a.toString() !== userId);
+    group.members = group.members.filter((m: any) => m.user.toString() !== userId.toString());
+    group.admins = group.admins.filter((a: any) => a.toString() !== userId.toString());
 
     await group.save();
     res.json({ message: 'Left group successfully' });
@@ -213,9 +213,9 @@ router.put('/:id', isAuthenticated, async (req: any, res: Response) => {
     }
 
     const userId = req.user!._id;
-    const isAdmin = group.admins.some((a: any) => a.toString() === userId);
+    const isAdmin = group.admins.some((a: any) => a.toString() === userId.toString());
 
-    if (!isAdmin && group.creator.toString() !== userId) {
+    if (!isAdmin && group.creator.toString() !== userId.toString()) {
       return res.status(403).json({ error: 'Only admins can update group details' });
     }
 
@@ -254,7 +254,7 @@ router.delete('/:id', isAuthenticated, async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Group not found' });
     }
 
-    if (group.creator.toString() !== req.user!._id) {
+    if (group.creator.toString() !== req.user!._id.toString()) {
       return res.status(403).json({ error: 'Only the creator can delete this group' });
     }
 
@@ -280,7 +280,7 @@ router.post('/:id/posts', isAuthenticated, async (req: any, res: Response) => {
     }
 
     const userId = req.user!._id;
-    const isMember = group.members.some((m: any) => m.user.toString() === userId);
+    const isMember = group.members.some((m: any) => m.user.toString() === userId.toString());
 
     if (!isMember) {
       return res.status(403).json({ error: 'Only members can post in this group' });
@@ -321,7 +321,7 @@ router.get('/:id/posts', isAuthenticated, async (req: any, res: Response) => {
     }
 
     const userId = req.user!._id;
-    const isMember = group.members.some((m: any) => m.user.toString() === userId);
+    const isMember = group.members.some((m: any) => m.user.toString() === userId.toString());
 
     if (!isMember && group.privacy === 'private') {
       return res.status(403).json({ error: 'Only members can view posts in private groups' });
@@ -371,8 +371,8 @@ router.put('/:id/members/:userId', isAuthenticated, async (req: any, res: Respon
     }
 
     const currentUserId = req.user!._id;
-    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId) || 
-                    group.creator.toString() === currentUserId;
+    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId.toString()) || 
+                    group.creator.toString() === currentUserId.toString();
 
     if (!isAdmin) {
       return res.status(403).json({ error: 'Only admins can update member roles' });
@@ -418,8 +418,8 @@ router.delete('/:id/members/:userId', isAuthenticated, async (req: any, res: Res
     }
 
     const currentUserId = req.user!._id;
-    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId) || 
-                    group.creator.toString() === currentUserId;
+    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId.toString()) || 
+                    group.creator.toString() === currentUserId.toString();
 
     if (!isAdmin) {
       return res.status(403).json({ error: 'Only admins can remove members' });
@@ -453,8 +453,8 @@ router.post('/:id/requests/:requestId/approve', isAuthenticated, async (req: any
     }
 
     const currentUserId = req.user!._id;
-    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId) || 
-                    group.creator.toString() === currentUserId;
+    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId.toString()) || 
+                    group.creator.toString() === currentUserId.toString();
 
     if (!isAdmin) {
       return res.status(403).json({ error: 'Only admins can approve join requests' });
@@ -502,8 +502,8 @@ router.delete('/:id/requests/:requestId', isAuthenticated, async (req: any, res:
     }
 
     const currentUserId = req.user!._id;
-    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId) || 
-                    group.creator.toString() === currentUserId;
+    const isAdmin = group.admins.some((a: any) => a.toString() === currentUserId.toString()) || 
+                    group.creator.toString() === currentUserId.toString();
 
     if (!isAdmin) {
       return res.status(403).json({ error: 'Only admins can reject join requests' });
