@@ -64,10 +64,10 @@ class ApiService {
   }
 
   // ==================== AUTH ====================
-  async login(email: string, password: string, role: string): Promise<{ user: User; token: string }> {
+  async login(email: string, password: string): Promise<{ user: User; token: string }> {
     const data = await this.request<{ user: User; token: string }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password, role }),
+      body: JSON.stringify({ email, password }),
     });
     // For session-based auth, token is just a placeholder
     if (data.token && data.token !== 'session-based-auth') {

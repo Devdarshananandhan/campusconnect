@@ -14,10 +14,13 @@ export interface IJob extends Document {
     max: number;
     currency: string;
   };
+  salaryMin?: number;
+  salaryMax?: number;
   experienceLevel: 'entry' | 'mid' | 'senior' | 'executive';
   skills: string[];
   benefits: string[];
   applicationDeadline?: Date;
+  applyUrl?: string;
   postedBy: mongoose.Types.ObjectId; // User ID of employer
   status: 'active' | 'closed' | 'draft';
   applications: mongoose.Types.ObjectId[]; // Reference to Application model
@@ -78,6 +81,12 @@ const JobSchema: Schema = new Schema(
         default: 'USD'
       }
     },
+    salaryMin: {
+      type: Number
+    },
+    salaryMax: {
+      type: Number
+    },
     experienceLevel: {
       type: String,
       enum: ['entry', 'mid', 'senior', 'executive'],
@@ -94,6 +103,10 @@ const JobSchema: Schema = new Schema(
     }],
     applicationDeadline: {
       type: Date
+    },
+    applyUrl: {
+      type: String,
+      trim: true
     },
     postedBy: {
       type: Schema.Types.ObjectId,

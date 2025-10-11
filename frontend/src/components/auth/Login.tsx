@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Mail, Lock, GraduationCap, Briefcase, BookOpen, Sparkles } from 'lucide-react';
+import { Users, Mail, Lock, GraduationCap, Briefcase, Sparkles } from 'lucide-react';
 import api from '../../services/api';
 
 interface LoginProps {
@@ -10,48 +10,24 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ setCurrentUser, onSwitchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'student' | 'alumni' | 'faculty'>('student');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async (email: string, password: string, role: string) => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setError('');
     
     try {
-      const response = await api.login(email, password, role);
+      const response = await api.login(email, password);
       setCurrentUser(response.user);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      setError(err.message || 'Login failed. Please check your credentials and try again.');
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const roleOptions = [
-    {
-      value: 'student',
-      label: 'Student',
-      icon: GraduationCap,
-      description: 'Current student seeking opportunities',
-      gradient: 'from-blue-500 to-cyan-500'
-    },
-    {
-      value: 'alumni',
-      label: 'Alumni',
-      icon: Briefcase,
-      description: 'Graduate ready to give back',
-      gradient: 'from-purple-500 to-pink-500'
-    },
-    {
-      value: 'faculty',
-      label: 'Faculty',
-      icon: BookOpen,
-      description: 'Educator and mentor',
-      gradient: 'from-orange-500 to-red-500'
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center p-4 relative overflow-hidden">
@@ -145,42 +121,17 @@ const Login: React.FC<LoginProps> = ({ setCurrentUser, onSwitchToRegister }) => 
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleLogin(e)}
                     className="input-field pl-12"
                     placeholder="••••••••"
                   />
                 </div>
               </div>
 
-              {/* Role Selection */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">I am a...</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {roleOptions.map((option) => {
-                    const Icon = option.icon;
-                    return (
-                      <button
-                        key={option.value}
-                        onClick={() => setRole(option.value as any)}
-                        className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                          role === option.value
-                            ? `border-primary-500 bg-gradient-to-br ${option.gradient} text-white shadow-lg scale-105`
-                            : 'border-gray-200 hover:border-gray-300 bg-white'
-                        }`}
-                      >
-                        <Icon className={`w-6 h-6 mx-auto mb-2 ${role === option.value ? 'text-white' : 'text-gray-600'}`} />
-                        <p className={`text-sm font-semibold ${role === option.value ? 'text-white' : 'text-gray-900'}`}>
-                          {option.label}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Sign In Button */}
               <button
-                onClick={() => handleLogin(email, password, role)}
-                disabled={isLoading}
+                onClick={handleLogin}
+                disabled={isLoading || !email || !password}
                 className="btn-primary w-full relative"
               >
                 {isLoading ? (

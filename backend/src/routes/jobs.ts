@@ -104,39 +104,80 @@ router.post('/', isAuthenticated, isEmployer, async (req: any, res: Response) =>
       location,
       locationType,
       salaryRange,
+      salaryMin,
+      salaryMax,
       experienceLevel,
       skills,
       benefits,
       applicationDeadline,
       tags,
-      isRemote
+      isRemote,
+      applyUrl
     } = req.body;
 
-    // Verify company exists
-    const companyDoc = await Company.findById(company);
-    if (!companyDoc) {
-      return res.status(404).json({ error: 'Company not found' });
-    }
-
-    // Check if user is authorized to post for this company
     const userId = req.user!._id;
-    const isRecruiter = companyDoc.recruiters.some((r: any) => r.toString() === userId.toString());
-    
-    if (!isRecruiter) {
-      return res.status(403).json({ error: 'You are not authorized to post jobs for this company' });
+    let companyId = company;
+
+    // If company is a string (company name), find or create the company
+    if (typeof company === 'string' && !company.match(/^[0-9a-fA-F]{24}$/)) {
+      // Company is a name, not an ID
+      let companyDoc = await Company.findOne({ name: company });
+      
+      if (!companyDoc) {
+        // Create new company
+        companyDoc = new Company({
+          name: company,
+          description: `Jobs at ${company}`,
+          industry: 'Technology',
+          size: 'medium',
+          headquarters: location || 'Not specified',
+          locations: location ? [location] : [],
+          recruiters: [userId],
+          jobs: [],
+          founded: new Date().getFullYear(),
+          website: applyUrl || '',
+          createdBy: userId,
+          verified: false,
+          featured: false,
+        });
+        await companyDoc.save();
+      } else {
+        // Add user as recruiter if not already
+        if (!companyDoc.recruiters.some((r: any) => r.toString() === userId.toString())) {
+          companyDoc.recruiters.push(userId as any);
+          await companyDoc.save();
+        }
+      }
+      
+      companyId = companyDoc._id;
+    } else {
+      // Company is an ID, verify it exists and user is authorized
+      const companyDoc = await Company.findById(company);
+      if (!companyDoc) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Check if user is authorized to post for this company
+      const isRecruiter = companyDoc.recruiters.some((r: any) => r.toString() === userId.toString());
+      
+      if (!isRecruiter) {
+        return res.status(403).json({ error: 'You are not authorized to post jobs for this company' });
+      }
     }
 
     const newJob = new Job({
       title,
-      company,
+      company: companyId,
       description,
       requirements: requirements || [],
       responsibilities: responsibilities || [],
       type,
       location,
       locationType: locationType || 'on-site',
-      salaryRange,
-      experienceLevel: experienceLevel || 'entry',
+      salaryRange: salaryRange || (salaryMin && salaryMax ? `${salaryMin}-${salaryMax}` : undefined),
+      salaryMin: salaryMin ? parseInt(salaryMin) : undefined,
+      salaryMax: salaryMax ? parseInt(salaryMax) : undefined,
+      experienceLevel: experienceLevel || 'Entry Level',
       skills: skills || [],
       benefits: benefits || [],
       applicationDeadline,
@@ -144,14 +185,18 @@ router.post('/', isAuthenticated, isEmployer, async (req: any, res: Response) =>
       status: 'active',
       tags: tags || [],
       isRemote: isRemote || false,
-      isFeatured: false
+      isFeatured: false,
+      applyUrl: applyUrl || undefined,
     });
 
     await newJob.save();
 
     // Add job to company's jobs array
-    companyDoc.jobs.push(newJob._id as any);
-    await companyDoc.save();
+    const companyDoc = await Company.findById(companyId);
+    if (companyDoc) {
+      companyDoc.jobs.push(newJob._id as any);
+      await companyDoc.save();
+    }
 
     const populatedJob = await Job.findById(newJob._id)
       .populate('company', 'name logo industry')

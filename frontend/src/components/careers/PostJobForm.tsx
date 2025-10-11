@@ -12,7 +12,7 @@ import {
   Building2,
   Calendar,
 } from 'lucide-react';
-import { Job, Company } from '../../types';
+import { Job } from '../../types';
 import api from '../../services/api';
 
 interface PostJobFormProps {
@@ -30,7 +30,6 @@ const PostJobForm: React.FC<PostJobFormProps> = ({
 }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [companies, setCompanies] = useState<Company[]>([]);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -53,11 +52,12 @@ const PostJobForm: React.FC<PostJobFormProps> = ({
   });
 
   useEffect(() => {
-    loadCompanies();
     if (jobToEdit) {
       setFormData({
         title: jobToEdit.title || '',
-        company: typeof jobToEdit.company === 'string' ? jobToEdit.company : (jobToEdit.company?.id || ''),
+        company: typeof jobToEdit.company === 'string' 
+          ? jobToEdit.company 
+          : (jobToEdit.company?.name || ''),
         location: jobToEdit.location || '',
         type: jobToEdit.type || 'Full-time',
         experienceLevel: jobToEdit.experienceLevel || 'Entry Level',
@@ -77,15 +77,6 @@ const PostJobForm: React.FC<PostJobFormProps> = ({
       });
     }
   }, [jobToEdit]);
-
-  const loadCompanies = async () => {
-    try {
-      const data = await api.getCompanies({});
-      setCompanies(data.companies || data);
-    } catch (error) {
-      console.error('Failed to load companies:', error);
-    }
-  };
 
   const handleArrayFieldChange = (
     field: 'responsibilities' | 'requirements' | 'skills' | 'benefits',
@@ -111,14 +102,63 @@ const PostJobForm: React.FC<PostJobFormProps> = ({
     setFormData({ ...formData, [field]: updated });
   };
 
+  // Silent validation for button disabled state (no alerts)
+  const isStepValid = (currentStep: number): boolean => {
+    switch (currentStep) {
+      case 1:
+        return !!(formData.title?.trim() && formData.company?.trim() && formData.location?.trim() && formData.type);
+      case 2:
+        return !!(formData.description?.trim() && formData.responsibilities.some(r => r.trim()));
+      case 3:
+        return !!(formData.requirements.some(r => r.trim()) && formData.skills.some(s => s.trim()));
+      case 4:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  // Validation with user feedback (shows alerts)
   const validateStep = (currentStep: number): boolean => {
     switch (currentStep) {
       case 1:
-        return !!(formData.title && formData.company && formData.location && formData.type);
+        if (!formData.title || !formData.title.trim()) {
+          alert('Please enter a job title');
+          return false;
+        }
+        if (!formData.company || !formData.company.trim()) {
+          alert('Please enter a company name');
+          return false;
+        }
+        if (!formData.location || !formData.location.trim()) {
+          alert('Please enter a location');
+          return false;
+        }
+        if (!formData.type) {
+          alert('Please select a job type');
+          return false;
+        }
+        return true;
       case 2:
-        return !!(formData.description && formData.responsibilities.some(r => r.trim()));
+        if (!formData.description || !formData.description.trim()) {
+          alert('Please enter a job description');
+          return false;
+        }
+        if (!formData.responsibilities.some(r => r.trim())) {
+          alert('Please add at least one responsibility');
+          return false;
+        }
+        return true;
       case 3:
-        return formData.requirements.some(r => r.trim()) && formData.skills.some(s => s.trim());
+        if (!formData.requirements.some(r => r.trim())) {
+          alert('Please add at least one requirement');
+          return false;
+        }
+        if (!formData.skills.some(s => s.trim())) {
+          alert('Please add at least one required skill');
+          return false;
+        }
+        return true;
       case 4:
         return true; // Optional fields
       default:
@@ -129,16 +169,37 @@ const PostJobForm: React.FC<PostJobFormProps> = ({
   const handleNext = () => {
     if (validateStep(step)) {
       setStep(step + 1);
-    } else {
-      alert('Please fill in all required fields');
     }
   };
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      // Convert form values to backend enum format
+      const convertType = (type: string): string => {
+        const typeMap: Record<string, string> = {
+          'Full-time': 'full-time',
+          'Part-time': 'part-time',
+          'Internship': 'internship',
+          'Contract': 'contract',
+        };
+        return typeMap[type] || type.toLowerCase();
+      };
+
+      const convertExperienceLevel = (level: string): string => {
+        const levelMap: Record<string, string> = {
+          'Entry Level': 'entry',
+          'Mid Level': 'mid',
+          'Senior': 'senior',
+          'Executive': 'executive',
+        };
+        return levelMap[level] || level.toLowerCase();
+      };
+
       const jobData = {
         ...formData,
+        type: convertType(formData.type),
+        experienceLevel: convertExperienceLevel(formData.experienceLevel),
         salaryMin: formData.salaryMin ? parseInt(formData.salaryMin) : undefined,
         salaryMax: formData.salaryMax ? parseInt(formData.salaryMax) : undefined,
         responsibilities: formData.responsibilities.filter(r => r.trim()),
@@ -238,19 +299,16 @@ const PostJobForm: React.FC<PostJobFormProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Company *
                 </label>
-                <select
-                  value={formData.company}
-                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  className="input-field w-full"
-                  title="Select company"
-                >
-                  <option value="">Select a company</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    value={formData.company}
+                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                    placeholder="e.g., Google, Microsoft, Amazon"
+                    className="input-field w-full pl-10"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -596,7 +654,7 @@ const PostJobForm: React.FC<PostJobFormProps> = ({
               <button
                 onClick={handleNext}
                 className="btn-primary"
-                disabled={!validateStep(step)}
+                disabled={!isStepValid(step)}
               >
                 Next
               </button>
