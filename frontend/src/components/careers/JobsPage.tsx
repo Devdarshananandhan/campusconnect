@@ -14,6 +14,7 @@ import {
 import { Job } from '../../types';
 import api from '../../services/api';
 import JobCard from './JobCard';
+import { hasPermission } from '../../utils/rolePermissions';
 
 interface JobsPageProps {
   currentUser: any;
@@ -98,7 +99,8 @@ const JobsPage: React.FC<JobsPageProps> = ({ currentUser, onJobClick, onCreateJo
     });
   };
 
-  const isEmployer = currentUser?.role === 'faculty' || currentUser?.role === 'alumni';
+  // Check if user has permission to post jobs (employer or recruiter only)
+  const canPostJobs = currentUser ? hasPermission(currentUser.role, 'canPostJobs') : false;
 
   const jobTypes = [
     { value: 'all', label: 'All Types' },
@@ -140,7 +142,7 @@ const JobsPage: React.FC<JobsPageProps> = ({ currentUser, onJobClick, onCreateJo
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            {isEmployer && (
+            {canPostJobs && (
               <button onClick={onCreateJob} className="btn-primary shadow-glow">
                 <Building2 className="w-5 h-5 mr-2" />
                 Post a Job

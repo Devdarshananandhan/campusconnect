@@ -29,6 +29,7 @@ import {
   Post as PostType,
   User
 } from '../../types';
+import { canAccessView } from '../../utils/rolePermissions';
 
 interface DashboardProps {
   currentUser: User | null;
@@ -520,6 +521,16 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
     return conversationList.reduce((total, conversation) => total + (conversation.unread || 0), 0);
   }, [conversationList]);
 
+  // Check if user can access the current view, if not redirect to feed
+  useEffect(() => {
+    if (currentUser && activeView !== 'feed' && activeView !== 'profile') {
+      if (!canAccessView(currentUser.role, activeView)) {
+        console.warn(`User with role ${currentUser.role} cannot access ${activeView}. Redirecting to feed.`);
+        setActiveView('feed');
+      }
+    }
+  }, [activeView, currentUser]);
+
   return (
     <>
       <Header
@@ -541,6 +552,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
           setActiveView={setActiveView} 
           sidebarOpen={sidebarOpen} 
           unreadMessages={unreadMessagesCount}
+          currentUser={currentUser}
         />
         <main className="flex-1 p-6 animate-fade-in">
           {activeView === 'feed' && (

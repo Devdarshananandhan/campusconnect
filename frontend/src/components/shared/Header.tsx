@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Bell, LogOut, Users, Menu, X, CheckCheck } from 'lucide-react';
 import { Notification, User } from '../../types';
+import { getRoleDisplayName, getRoleBadgeColor } from '../../utils/rolePermissions';
 
 interface HeaderProps {
   currentUser: User | null;
@@ -94,15 +95,22 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <img
                 src={avatar}
                 alt="Profile"
                 className="w-8 h-8 rounded-full border-2 border-blue-600"
               />
-              <span className="hidden md:block text-sm font-medium">
-                {currentUser?.profile?.name || 'Member'}
-              </span>
+              <div className="hidden md:flex flex-col items-start">
+                <span className="text-sm font-medium text-gray-900">
+                  {currentUser?.profile?.name || 'Member'}
+                </span>
+                {currentUser?.role && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(currentUser.role)}`}>
+                    {getRoleDisplayName(currentUser.role)}
+                  </span>
+                )}
+              </div>
             </div>
 
             <button

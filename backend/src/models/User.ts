@@ -5,10 +5,12 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { 
     type: String, 
-    enum: ['student', 'alumni', 'faculty'], 
+    enum: ['student', 'alumni', 'faculty', 'employer', 'recruiter'], 
     required: true,
     index: true 
   },
+  // Company association for employers/recruiters
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
   profile: {
     name: { type: String, required: true },
     avatar: String,
@@ -17,6 +19,7 @@ const userSchema = new mongoose.Schema({
     graduationYear: String,
     company: String,
     department: String,
+    jobTitle: String, // Added for employers/recruiters
     skills: [String],
     interests: [String],
     location: String,

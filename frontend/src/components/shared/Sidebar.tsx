@@ -1,37 +1,46 @@
 import React from 'react';
 import { TrendingUp, Users, Calendar, Target, MessageSquare, User, Zap, UsersRound, Trophy, Award, BookOpen, Briefcase, FileText, Building2, UserPlus, GitPullRequest, LayoutDashboard } from 'lucide-react';
+import { canAccessView } from '../../utils/rolePermissions';
+import type { User as UserType } from '../../types';
 
 interface SidebarProps {
   activeView: string;
   setActiveView: (view: string) => void;
   sidebarOpen: boolean;
   unreadMessages?: number;
+  currentUser?: UserType | null;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpen, unreadMessages = 0 }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpen, unreadMessages = 0, currentUser }) => {
   const menuItems = [
-    { id: 'feed', label: 'Feed', icon: TrendingUp },
-    { id: 'knowledge', label: 'Knowledge Hub', icon: BookOpen },
-    { id: 'network', label: 'My Network', icon: Users },
-    { id: 'groups', label: 'Groups', icon: UsersRound },
-    { id: 'careers', label: 'Careers', icon: Briefcase },
-    { id: 'companies', label: 'Companies', icon: Building2 },
-    { id: 'my-applications', label: 'My Applications', icon: FileText },
-    { id: 'referrals', label: 'Referral Marketplace', icon: UserPlus },
-    { id: 'referral-dashboard', label: 'My Referrals', icon: GitPullRequest },
-    { id: 'employer-dashboard', label: 'Employer Dashboard', icon: LayoutDashboard },
-    { id: 'events', label: 'Events', icon: Calendar },
-    { id: 'mentorship', label: 'Mentorship', icon: Target },
-    { id: 'messages', label: 'Messages', icon: MessageSquare },
-    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-    { id: 'badges', label: 'Badges', icon: Award },
-    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'feed', label: 'Feed', icon: TrendingUp, roles: ['student', 'alumni', 'faculty', 'employer', 'recruiter'] },
+    { id: 'knowledge', label: 'Knowledge Hub', icon: BookOpen, roles: ['student', 'alumni', 'faculty', 'employer', 'recruiter'] },
+    { id: 'network', label: 'My Network', icon: Users, roles: ['student', 'alumni', 'faculty', 'employer', 'recruiter'] },
+    { id: 'groups', label: 'Groups', icon: UsersRound, roles: ['student', 'alumni', 'faculty', 'employer', 'recruiter'] },
+    { id: 'careers', label: 'Careers', icon: Briefcase, roles: ['student', 'alumni', 'faculty', 'employer', 'recruiter'] },
+    { id: 'companies', label: 'Companies', icon: Building2, roles: ['student', 'alumni', 'faculty', 'employer', 'recruiter'] },
+    { id: 'my-applications', label: 'My Applications', icon: FileText, roles: ['student', 'alumni'] },
+    { id: 'referrals', label: 'Referral Marketplace', icon: UserPlus, roles: ['student', 'alumni'] },
+    { id: 'referral-dashboard', label: 'My Referrals', icon: GitPullRequest, roles: ['alumni', 'faculty'] },
+    { id: 'employer-dashboard', label: 'Employer Dashboard', icon: LayoutDashboard, roles: ['employer', 'recruiter'] },
+    { id: 'events', label: 'Events', icon: Calendar, roles: ['student', 'alumni', 'faculty', 'employer', 'recruiter'] },
+    { id: 'mentorship', label: 'Mentorship', icon: Target, roles: ['student', 'alumni', 'faculty'] },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, roles: ['student', 'alumni', 'faculty', 'employer', 'recruiter'] },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, roles: ['student', 'alumni', 'faculty'] },
+    { id: 'badges', label: 'Badges', icon: Award, roles: ['student', 'alumni', 'faculty'] },
+    { id: 'profile', label: 'Profile', icon: User, roles: ['student', 'alumni', 'faculty', 'employer', 'recruiter'] },
   ];
+
+  // Filter menu items based on user role
+  const visibleMenuItems = menuItems.filter(item => {
+    if (!currentUser) return true; // Show all if no user (shouldn't happen)
+    return canAccessView(currentUser.role, item.id);
+  });
 
   return (
     <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block fixed lg:sticky top-16 left-0 w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto z-30 shadow-soft`}>
       <nav className="p-4 space-y-1">
-        {menuItems.map((item) => {
+        {visibleMenuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeView === item.id;
           return (

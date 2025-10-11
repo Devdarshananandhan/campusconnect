@@ -2,14 +2,14 @@ import express, { Request, Response } from 'express';
 import Application from '../models/Application';
 import Job from '../models/Job';
 import Notification from '../models/Notification';
-import { isAuthenticated } from '../middleware/auth';
+import { isAuthenticated, canApplyToJobs, isEmployer } from '../middleware/auth';
 
 const router = express.Router();
 
 // @route   POST /api/applications
 // @desc    Submit a job application
-// @access  Private (Students/Alumni)
-router.post('/', isAuthenticated, async (req: any, res: Response) => {
+// @access  Private (Students and Alumni only)
+router.post('/', isAuthenticated, canApplyToJobs, async (req: any, res: Response) => {
   try {
     const { job, resume, coverLetter, answers, referredBy } = req.body;
 
@@ -146,9 +146,9 @@ router.get('/:id', isAuthenticated, async (req: any, res: Response) => {
 });
 
 // @route   PUT /api/applications/:id/status
-// @desc    Update application status (Recruiter only)
+// @desc    Update application status (Employers and Recruiters only)
 // @access  Private
-router.put('/:id/status', isAuthenticated, async (req: any, res: Response) => {
+router.put('/:id/status', isAuthenticated, isEmployer, async (req: any, res: Response) => {
   try {
     const { status, notes } = req.body;
 

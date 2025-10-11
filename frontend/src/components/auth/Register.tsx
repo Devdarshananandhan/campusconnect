@@ -15,7 +15,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onSwitchToLogin 
     password: '',
     confirmPassword: '',
     name: '',
-    role: 'student' as 'student' | 'alumni' | 'faculty',
+    role: 'student' as 'student' | 'alumni' | 'faculty' | 'employer' | 'recruiter',
     
     // Step 2: Profile Details
     bio: '',
@@ -23,6 +23,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onSwitchToLogin 
     graduationYear: '',
     company: '',
     department: '',
+    jobTitle: '', // Added for employers/recruiters
     skills: [] as string[],
     interests: [] as string[],
   });
@@ -35,7 +36,9 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onSwitchToLogin 
   const roleOptions = [
     { value: 'student', label: 'Student', icon: GraduationCap, description: 'Currently enrolled student' },
     { value: 'alumni', label: 'Alumni', icon: Briefcase, description: 'Graduate of the institution' },
-    { value: 'faculty', label: 'Faculty', icon: Building2, description: 'Teacher or staff member' }
+    { value: 'faculty', label: 'Faculty', icon: Building2, description: 'Teacher or staff member' },
+    { value: 'employer', label: 'Employer', icon: Building2, description: 'Company representative' },
+    { value: 'recruiter', label: 'Recruiter', icon: Users, description: 'Talent acquisition professional' }
   ];
 
   const addSkill = () => {
@@ -99,6 +102,7 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onSwitchToLogin 
           graduationYear: formData.graduationYear || undefined,
           company: formData.company || undefined,
           department: formData.department || undefined,
+          jobTitle: formData.jobTitle || undefined,
           skills: formData.skills,
           interests: formData.interests,
         }
@@ -338,6 +342,33 @@ const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onSwitchToLogin 
                     placeholder="Computer Science"
                   />
                 </div>
+              )}
+
+              {(formData.role === 'employer' || formData.role === 'recruiter') && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-white font-semibold mb-2">Company</label>
+                      <input
+                        type="text"
+                        value={formData.company}
+                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        placeholder="Company Name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-white font-semibold mb-2">Job Title</label>
+                      <input
+                        type="text"
+                        value={formData.jobTitle}
+                        onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        placeholder="HR Manager, Recruiter, etc."
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Skills */}

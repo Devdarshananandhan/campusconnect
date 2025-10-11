@@ -2,7 +2,8 @@
 export interface User {
   id: string;
   email: string;
-  role: 'student' | 'alumni' | 'faculty';
+  role: 'student' | 'alumni' | 'faculty' | 'employer' | 'recruiter';
+  companyId?: string; // For employers/recruiters
   profile: UserProfile;
   connections: string[];
   endorsements: Endorsement[];
@@ -26,6 +27,7 @@ export interface UserProfile {
   graduationYear?: string;
   company?: string;
   department?: string;
+  jobTitle?: string; // Added for employers/recruiters
   skills: string[];
   interests: string[];
   location?: string;

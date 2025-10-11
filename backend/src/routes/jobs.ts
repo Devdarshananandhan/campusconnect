@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import Job from '../models/Job';
 import Company from '../models/Company';
 import Application from '../models/Application';
-import { isAuthenticated } from '../middleware/auth';
+import { isAuthenticated, isEmployer } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -91,8 +91,8 @@ router.get('/:id', isAuthenticated, async (req: Request, res: Response) => {
 
 // @route   POST /api/jobs
 // @desc    Create a new job posting
-// @access  Private (Recruiters only)
-router.post('/', isAuthenticated, async (req: any, res: Response) => {
+// @access  Private (Employers and Recruiters only)
+router.post('/', isAuthenticated, isEmployer, async (req: any, res: Response) => {
   try {
     const {
       title,
@@ -166,8 +166,8 @@ router.post('/', isAuthenticated, async (req: any, res: Response) => {
 
 // @route   PUT /api/jobs/:id
 // @desc    Update job posting
-// @access  Private (Job poster only)
-router.put('/:id', isAuthenticated, async (req: any, res: Response) => {
+// @access  Private (Employers and Recruiters only - Job poster)
+router.put('/:id', isAuthenticated, isEmployer, async (req: any, res: Response) => {
   try {
     const job = await Job.findById(req.params.id);
 
@@ -200,8 +200,8 @@ router.put('/:id', isAuthenticated, async (req: any, res: Response) => {
 
 // @route   DELETE /api/jobs/:id
 // @desc    Delete job posting
-// @access  Private (Job poster only)
-router.delete('/:id', isAuthenticated, async (req: any, res: Response) => {
+// @access  Private (Employers and Recruiters only - Job poster)
+router.delete('/:id', isAuthenticated, isEmployer, async (req: any, res: Response) => {
   try {
     const job = await Job.findById(req.params.id);
 
@@ -229,9 +229,9 @@ router.delete('/:id', isAuthenticated, async (req: any, res: Response) => {
 });
 
 // @route   GET /api/jobs/:id/applications
-// @desc    Get all applications for a job (Recruiter only)
+// @desc    Get all applications for a job (Employers and Recruiters only)
 // @access  Private
-router.get('/:id/applications', isAuthenticated, async (req: any, res: Response) => {
+router.get('/:id/applications', isAuthenticated, isEmployer, async (req: any, res: Response) => {
   try {
     const job = await Job.findById(req.params.id);
 
