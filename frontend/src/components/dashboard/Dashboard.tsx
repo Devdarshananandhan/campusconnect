@@ -14,6 +14,13 @@ import KnowledgeHub from '../knowledge/KnowledgeHub';
 import JobsPage from '../careers/JobsPage';
 import JobDetailPage from '../careers/JobDetailPage';
 import MyApplicationsPage from '../careers/MyApplicationsPage';
+import CompaniesPage from '../careers/CompaniesPage';
+import CompanyDetailPage from '../careers/CompanyDetailPage';
+import ReferralMarketplace from '../careers/ReferralMarketplace';
+import ReferralDashboard from '../careers/ReferralDashboard';
+import EmployerDashboard from '../careers/EmployerDashboard';
+import PostJobForm from '../careers/PostJobForm';
+import ApplicantTrackingSystem from '../careers/ApplicantTrackingSystem';
 import api from '../../services/api';
 import {
   Event as EventType,
@@ -61,6 +68,10 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
 
   // Careers state
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [showPostJobForm, setShowPostJobForm] = useState(false);
+  const [jobToEdit, setJobToEdit] = useState<any>(null);
+  const [atsJobId, setAtsJobId] = useState<string | null>(null);
 
   // Clear search when changing views
   useEffect(() => {
@@ -596,23 +607,82 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
               currentUser={currentUser}
               onJobClick={(jobId) => setSelectedJobId(jobId)}
               onCreateJob={() => {
-                // TODO: Implement job creation modal/page
-                alert('Job creation form will be implemented in Phase 5');
+                setShowPostJobForm(true);
+                setJobToEdit(null);
               }}
             />
           )}
           {activeView === 'my-applications' && (
             <MyApplicationsPage currentUser={currentUser} />
           )}
+          {activeView === 'referrals' && (
+            <ReferralMarketplace
+              currentUser={currentUser}
+              onJobClick={(jobId) => {
+                setSelectedJobId(jobId);
+                setActiveView('careers');
+              }}
+            />
+          )}
+          {activeView === 'referral-dashboard' && (
+            <ReferralDashboard
+              currentUser={currentUser}
+              onJobClick={(jobId) => {
+                setSelectedJobId(jobId);
+                setActiveView('careers');
+              }}
+            />
+          )}
+          {activeView === 'companies' && !selectedCompanyId && (
+            <CompaniesPage
+              currentUser={currentUser}
+              onCompanyClick={(companyId) => setSelectedCompanyId(companyId)}
+            />
+          )}
+          {activeView === 'companies' && selectedCompanyId && (
+            <CompanyDetailPage
+              companyId={selectedCompanyId}
+              onBack={() => setSelectedCompanyId(null)}
+              onJobClick={(jobId) => {
+                setSelectedJobId(jobId);
+                setActiveView('careers');
+              }}
+              currentUser={currentUser}
+            />
+          )}
           {activeView === 'careers' && selectedJobId && (
             <JobDetailPage
               jobId={selectedJobId}
               onBack={() => setSelectedJobId(null)}
               onRequestReferral={(jobId) => {
-                // TODO: Implement referral request modal (Phase 4)
-                alert('Referral request will be implemented in Phase 4');
+                setActiveView('referrals');
               }}
               currentUser={currentUser}
+            />
+          )}
+          {activeView === 'employer-dashboard' && !atsJobId && (
+            <EmployerDashboard
+              currentUser={currentUser}
+              onCreateJob={() => {
+                setShowPostJobForm(true);
+                setJobToEdit(null);
+              }}
+              onEditJob={(jobId) => {
+                // Load job data and open edit form
+                api.getJob(jobId).then((job) => {
+                  setJobToEdit(job);
+                  setShowPostJobForm(true);
+                });
+              }}
+              onViewApplications={(jobId) => {
+                setAtsJobId(jobId);
+              }}
+            />
+          )}
+          {activeView === 'employer-dashboard' && atsJobId && (
+            <ApplicantTrackingSystem
+              jobId={atsJobId}
+              onBack={() => setAtsJobId(null)}
             />
           )}
           {activeView === 'leaderboard' && <Leaderboard currentUserId={currentUser?.id || ''} />}
@@ -625,6 +695,24 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, setCurrentUser }) =>
             />
           )}
         </main>
+
+        {/* Post Job Form Modal */}
+        {showPostJobForm && (
+          <PostJobForm
+            currentUser={currentUser}
+            jobToEdit={jobToEdit}
+            onClose={() => {
+              setShowPostJobForm(false);
+              setJobToEdit(null);
+            }}
+            onSuccess={() => {
+              // Reload employer dashboard if active
+              if (activeView === 'employer-dashboard') {
+                window.location.reload();
+              }
+            }}
+          />
+        )}
       </div>
     </>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, Users, Calendar, Target, MessageSquare, User, Zap, UsersRound, Trophy, Award, BookOpen, Briefcase, FileText } from 'lucide-react';
+import { TrendingUp, Users, Calendar, Target, MessageSquare, User, Zap, UsersRound, Trophy, Award, BookOpen, Briefcase, FileText, Building2, UserPlus, GitPullRequest, LayoutDashboard } from 'lucide-react';
 
 interface SidebarProps {
   activeView: string;
@@ -15,7 +15,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, sidebarOpe
     { id: 'network', label: 'My Network', icon: Users },
     { id: 'groups', label: 'Groups', icon: UsersRound },
     { id: 'careers', label: 'Careers', icon: Briefcase },
+    { id: 'companies', label: 'Companies', icon: Building2 },
     { id: 'my-applications', label: 'My Applications', icon: FileText },
+    { id: 'referrals', label: 'Referral Marketplace', icon: UserPlus },
+    { id: 'referral-dashboard', label: 'My Referrals', icon: GitPullRequest },
+    { id: 'employer-dashboard', label: 'Employer Dashboard', icon: LayoutDashboard },
     { id: 'events', label: 'Events', icon: Calendar },
     { id: 'mentorship', label: 'Mentorship', icon: Target },
     { id: 'messages', label: 'Messages', icon: MessageSquare },

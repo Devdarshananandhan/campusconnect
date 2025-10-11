@@ -197,10 +197,11 @@ const JobsPage: React.FC<JobsPageProps> = ({ currentUser, onJobClick, onCreateJo
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Job Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="job-type-select" className="block text-sm font-medium text-gray-700 mb-2">
                 Job Type
               </label>
               <select
+                id="job-type-select"
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
                 className="input-field"
@@ -215,11 +216,12 @@ const JobsPage: React.FC<JobsPageProps> = ({ currentUser, onJobClick, onCreateJo
 
             {/* Location */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="location-select" className="block text-sm font-medium text-gray-700 mb-2">
                 <MapPin className="w-4 h-4 inline mr-1" />
                 Location
               </label>
               <select
+                id="location-select"
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
                 className="input-field"
@@ -234,32 +236,36 @@ const JobsPage: React.FC<JobsPageProps> = ({ currentUser, onJobClick, onCreateJo
 
             {/* Min Salary */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="min-salary-input" className="block text-sm font-medium text-gray-700 mb-2">
                 <DollarSign className="w-4 h-4 inline mr-1" />
                 Min Salary ($)
               </label>
               <input
+                id="min-salary-input"
                 type="number"
                 value={minSalary}
                 onChange={(e) => setMinSalary(Number(e.target.value))}
                 min="0"
                 step="10000"
                 className="input-field"
+                aria-label="Minimum Salary Filter"
               />
             </div>
 
             {/* Max Salary */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="max-salary-input" className="block text-sm font-medium text-gray-700 mb-2">
                 Max Salary ($)
               </label>
               <input
+                id="max-salary-input"
                 type="number"
                 value={maxSalary}
                 onChange={(e) => setMaxSalary(Number(e.target.value))}
                 min="0"
                 step="10000"
                 className="input-field"
+                aria-label="Maximum Salary Filter"
               />
             </div>
           </div>

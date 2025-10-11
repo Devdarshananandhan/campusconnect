@@ -495,6 +495,9 @@ export interface Job {
     max: number;
     currency: string;
   };
+  salaryMin?: number;
+  salaryMax?: number;
+  isRemote?: boolean;
   requirements: string[];
   responsibilities: string[];
   benefits: string[];
@@ -506,9 +509,12 @@ export interface Job {
   postedBy: User | string;
   applications: Application[] | string[];
   isActive: boolean;
+  status?: 'active' | 'closed' | 'draft';
   featured: boolean;
   views: number;
+  viewCount?: number;
   applicantCount: number;
+  applicationCount?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -520,19 +526,22 @@ export interface Application {
   job: Job | string;
   applicant: User | string;
   resume: string;
+  resumeUrl?: string;
   coverLetter: string;
+  phone?: string;
   status: 'pending' | 'reviewed' | 'shortlisted' | 'interviewing' | 'offered' | 'rejected' | 'withdrawn';
   statusHistory: StatusChange[];
   answers?: Record<string, any>;
-  customAnswers?: Record<string, any>;
+  customAnswers?: any[];
   linkedinUrl?: string;
   portfolioUrl?: string;
   availableStartDate?: Date | string;
   referral?: Referral | string;
-  notes?: string;
+  notes?: any[];
   employerNotes?: string;
   rating?: number;
   appliedAt: Date;
+  createdAt: Date;
   updatedAt: Date;
 }
 
@@ -556,6 +565,7 @@ export interface Company {
   size: 'startup' | 'small' | 'medium' | 'large' | 'enterprise';
   location: string;
   locations?: string[];
+  headquarters?: string;
   foundedYear?: number;
   socialMedia?: {
     linkedin?: string;
@@ -574,6 +584,8 @@ export interface Company {
   reviews: CompanyReview[];
   averageRating: number;
   isVerified: boolean;
+  featured?: boolean;
+  activeJobs?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -583,6 +595,7 @@ export interface CompanyReview {
   reviewer: User | string;
   rating: number;
   title: string;
+  review: string;
   pros: string;
   cons: string;
   advice?: string;

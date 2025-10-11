@@ -612,6 +612,7 @@ class ApiService {
     minSalary?: number;
     maxSalary?: number;
     search?: string;
+    postedBy?: string;
   }): Promise<{ jobs: any[]; total: number }> {
     const params = new URLSearchParams(filters as any);
     return this.request<{ jobs: any[]; total: number }>(`/jobs?${params}`);
@@ -620,6 +621,10 @@ class ApiService {
   async getJobById(jobId: string): Promise<any> {
     const data = await this.request<{ job: any }>(`/jobs/${jobId}`);
     return data.job;
+  }
+
+  async getJob(jobId: string): Promise<any> {
+    return this.getJobById(jobId);
   }
 
   async createJob(jobData: any): Promise<any> {
@@ -667,6 +672,11 @@ class ApiService {
     return data.applications;
   }
 
+  async getApplications(filters?: { job?: string; applicant?: string }): Promise<{ applications: any[] }> {
+    const params = new URLSearchParams(filters as any);
+    return this.request<{ applications: any[] }>(`/applications?${params}`);
+  }
+
   async getApplicationById(applicationId: string): Promise<any> {
     const data = await this.request<{ application: any }>(`/applications/${applicationId}`);
     return data.application;
@@ -676,6 +686,14 @@ class ApiService {
     const data = await this.request<{ application: any }>(`/applications/${applicationId}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status, notes }),
+    });
+    return data.application;
+  }
+
+  async addApplicationNote(applicationId: string, note: string): Promise<any> {
+    const data = await this.request<{ application: any }>(`/applications/${applicationId}/notes`, {
+      method: 'POST',
+      body: JSON.stringify({ note }),
     });
     return data.application;
   }
